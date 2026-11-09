@@ -15,7 +15,7 @@ Android does not let apps replace or disable the system lock. To unlock only onc
 
 ## Build
 Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotlin 2.0.21.
-`gradle testDebugUnitTest assembleDebug` (or `gradle wrapper` once to generate `gradlew`). Every push to `main` also builds a debug APK in GitHub Actions (Actions tab > latest run > `tumbler-debug-apk`); download it on your phone and install it.
+`gradle testDebugUnitTest assembleDebug` (or `gradle wrapper` once to generate `gradlew`). Every push to `main` is built, given the next version (1.0.1, 1.0.2, ...) and published as a GitHub Release with the APK attached; download it on your phone and install it. Pull requests only get a test and build check. To start a new minor or major line, push a tag by hand such as `v1.1.0`.
 
 ## First run
 1. Create and confirm a 4-digit PIN.

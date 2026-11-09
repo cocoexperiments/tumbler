@@ -1,8 +1,9 @@
 name: Android CI
 
+# Checks for pull requests and manual runs. Pushes to main are built, versioned and
+# released by release.yml, so they are not repeated here.
+
 on:
-  push:
-    branches: [main]
   pull_request:
   workflow_dispatch:
 

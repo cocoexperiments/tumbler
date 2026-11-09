@@ -12,8 +12,9 @@ android {
         applicationId = "com.cocoexperiments.tumbler"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        // Set by CI from git (see .github/workflows/release.yml). Local builds use the dev defaults.
+        versionCode = (findProperty("appVersionCode") as String?)?.toInt() ?: 1
+        versionName = (findProperty("appVersionName") as String?) ?: "0.0.0-dev"
     }
 
     buildTypes {

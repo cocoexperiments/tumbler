@@ -4,7 +4,7 @@ Tumbler is an Android PIN lock screen app by Coco Experiments (https://cocoexper
 
 ## Docs
 
-- [Automated versioning architecture](https://claude.ai/artifact/G3MqshSQ2L94SdAC3z64cD): design for auto-incrementing the version on every push to `main`. Status: designed, not yet implemented. Sign-in to claude.ai is required.
+- [Automated versioning architecture](https://claude.ai/artifact/G3MqshSQ2L94SdAC3z64cD): design for auto-incrementing the version on every push to `main`. Implemented in `.github/workflows/release.yml`. Sign-in to claude.ai is required.
 - `README.md`: build, first run, layout, "one lock instead of two", staying locked, known platform limits.
 - `docs/` is the GitHub Pages landing page (`index.html`, logo). Do not put internal documentation there; it is published.
 
@@ -39,18 +39,17 @@ Keep this file current. When architecture, build, release or conventions change,
 - Unit tests are in `app/src/test/.../domain/` (`KeypadGeneratorTest`, `PinSessionTest`). Add tests for any new `domain/` logic.
 - If you change the logo parameters, run `python3 logo/gen_logo.py <repo root>` and re-export `docs/logo.png` from `docs/logo.svg`.
 
-## CI and releases
+## CI, versioning and releases
 
-- `.github/workflows/android.yml`: on push to `main`, pull requests and manual runs. Runs unit tests, builds the debug APK and uploads it as `tumbler-debug-apk`.
-- `.github/workflows/release.yml`: on push of a `v*` tag. Builds a debug APK and publishes a GitHub Release with `tumbler-<tag>.apk`.
-- APKs are currently debug-signed. There is no release keystore yet.
-- `app/build.gradle.kts` hardcodes `versionCode = 1` and `versionName = "1.0.0"` today.
-
-## Versioning (planned, see the doc above)
-
-- Every push to `main` gets the next patch version, starting at `1.0.0`. Git tags `v<major>.<minor>.<patch>` are the source of truth, tagged only after a successful build. `versionCode` is the commit count on `main`. A hand-pushed tag such as `v1.1.0` sets a new minor or major baseline.
-- Open point when implementing: tags pushed with the default `GITHUB_TOKEN` do not trigger `release.yml`. Either build and release in the same workflow that creates the tag, or push the tag with a token that can trigger workflows.
-- Do not add version-bump commits and do not hand-edit `versionCode` or `versionName` once this is in place.
+- `.github/workflows/release.yml` (Build and Release): runs on every push to `main`. Computes the version, runs unit tests, builds the debug APK with that version, uploads it as an Actions artifact, then tags the commit `v<version>` and publishes a GitHub Release with `tumbler-<version>.apk`. A failed build creates no tag, so the number is not used up.
+- `.github/workflows/android.yml` (Android CI): pull requests and manual runs only. Tests and debug build, no tag, no release, no version.
+- Version: patch increments on every push to `main` (v1.0.1, v1.0.2, ...). Git tags are the source of truth: the next version is the highest plain `vMAJOR.MINOR.PATCH` tag plus one patch. `versionName` is that version; `versionCode` is `git rev-list --count HEAD`. Design and rationale: see the versioning doc above.
+- To start a new minor or major line, push a tag by hand (for example `v1.1.0`). It does not build by itself; the next push to `main` becomes `1.1.1`.
+- `app/build.gradle.kts` reads `-PappVersionName` and `-PappVersionCode`. Local builds without them get `0.0.0-dev` and code 1. Never hand-edit the version, and never add version-bump commits.
+- The tag is pushed with `GITHUB_TOKEN`, which does not start other workflows, so the release is published in the same workflow. Do not add a separate tag-triggered release workflow.
+- Runs are serialized with a `concurrency` group. GitHub keeps only the newest waiting run, so if several pushes land while a build is running, the older queued ones are skipped and get no version of their own.
+- Never rewrite `main` history (force push, rebase of pushed commits): it can lower the commit count and break `versionCode` ordering.
+- APKs are debug-signed. There is no release keystore yet, so each build's signature depends on the debug key of the runner. Moving to a stable release key is an open item; do it before sharing builds beyond sideloading.
 
 ## Conventions
 

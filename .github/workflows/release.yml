@@ -1,17 +1,62 @@
-name: Release APK
+name: Build and Release
+
+# Every push to main gets the next patch version (v1.0.1, v1.0.2, ...).
+# Git tags are the source of truth. The tag is created only after the build succeeds.
+# To start a new minor or major line, push a tag by hand (e.g. v1.1.0); the next push becomes 1.1.1.
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
 
 permissions:
   contents: write
+
+# Run one at a time so two quick pushes cannot compute the same version.
+# GitHub keeps only the newest waiting run, so an older push that is still queued
+# when a newer one arrives is skipped and gets no version of its own.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute version
+        id: version
+        run: |
+          set -euo pipefail
+          git fetch --tags --force
+          # Only plain vMAJOR.MINOR.PATCH tags count; anything else (v1.2.0-rc1, etc.) is ignored.
+          semver_tags() { { grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true; } | sort -V | tail -n1; }
+
+          # A re-run of an already tagged commit keeps its version and does not tag again.
+          EXISTING=$(git tag --points-at HEAD | semver_tags)
+          if [ -n "$EXISTING" ]; then
+            VERSION="${EXISTING#v}"
+            NEW_TAG=false
+          else
+            LAST=$(git tag --list | semver_tags)
+            if [ -z "$LAST" ]; then
+              VERSION="1.0.0"
+            else
+              IFS=. read -r MAJOR MINOR PATCH <<< "${LAST#v}"
+              VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+            fi
+            NEW_TAG=true
+          fi
+
+          # Always increases while main history is not rewritten.
+          CODE=$(git rev-list --count HEAD)
+
+          echo "name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION (code $CODE), new tag: $NEW_TAG"
 
       - uses: actions/setup-java@v4
         with:
@@ -22,14 +67,43 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      - name: Unit tests
+        run: gradle testDebugUnitTest
+
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: >
+          gradle assembleDebug
+          -PappVersionName=${{ steps.version.outputs.name }}
+          -PappVersionCode=${{ steps.version.outputs.code }}
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk "tumbler-${GITHUB_REF_NAME}.apk"
+        run: cp app/build/outputs/apk/debug/app-debug.apk "tumbler-${{ steps.version.outputs.name }}.apk"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tumbler-${{ steps.version.outputs.name }}-apk
+          path: tumbler-${{ steps.version.outputs.name }}.apk
+          if-no-files-found: error
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
+
+      # Tags pushed with GITHUB_TOKEN do not start other workflows, so the release is published here.
+      - name: Tag the commit
+        if: steps.version.outputs.new_tag == 'true'
+        run: |
+          git tag "v${{ steps.version.outputs.name }}"
+          git push origin "v${{ steps.version.outputs.name }}"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: tumbler-*.apk
+          tag_name: v${{ steps.version.outputs.name }}
+          name: Tumbler ${{ steps.version.outputs.name }}
+          files: tumbler-${{ steps.version.outputs.name }}.apk
           generate_release_notes: true
