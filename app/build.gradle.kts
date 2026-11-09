@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.dynamiclock"
+    namespace = "com.cocoexperiments.tumbler"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.dynamiclock"
+        applicationId = "com.cocoexperiments.tumbler"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

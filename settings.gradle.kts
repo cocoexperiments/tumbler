@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DynamicLock"
+rootProject.name = "Tumbler"
 include(":app")

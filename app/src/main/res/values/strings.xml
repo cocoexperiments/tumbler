@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Dynamic Lock</string>
+    <string name="app_name">Tumbler</string>
 
     <!-- Notifications -->
     <string name="channel_service_name">Lock service</string>
@@ -43,5 +43,5 @@
     <string name="granted">Granted</string>
     <string name="home_preview">Preview lock screen</string>
     <string name="home_change_pin">Change PIN</string>
-    <string name="home_note">Android does not let apps replace the system lock screen. Dynamic Lock appears on top of it as an extra PIN layer, so keep your device\'s own screen lock enabled for full protection.</string>
+    <string name="home_note">Android does not let apps replace the system lock screen. Tumbler appears on top of it as an extra PIN layer, so keep your device\'s own screen lock enabled for full protection.</string>
 </resources>

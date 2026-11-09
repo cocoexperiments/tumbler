@@ -1,10 +1,10 @@
-# Dynamic Lock
+# Tumbler
 
 Compose + Material 3 (dark) PIN lock screen with a shuffling 3x3 "digit group" keypad.
 
 ## Build
 Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotlin 2.0.21.
-`./gradlew testDebugUnitTest assembleDebug` (generate the wrapper with `gradle wrapper` if you build from the CLI).
+`gradle testDebugUnitTest assembleDebug` (or `gradle wrapper` once to generate `gradlew`). Every push to `main` also builds a debug APK in GitHub Actions (Actions tab > latest run > `tumbler-debug-apk`); download it on your phone and install it.
 
 ## First run
 1. Create and confirm a 4-digit PIN.
