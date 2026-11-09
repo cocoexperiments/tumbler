@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tumbler — a lock screen that shuffles</title>
-<meta name="description" content="Tumbler is an Android PIN lock screen with a shuffling keypad of digit groups. Nobody can read your PIN from your fingers. A Coco Experiments product.">
+<meta name="description" content="Tumbler is an Android PIN lock screen with a shuffling keypad of digit groups. Nobody can read your PIN from your fingers. Optional fingerprint unlock. A Coco Experiments product.">
 <meta name="theme-color" content="#0F1210">
 <meta property="og:title" content="Tumbler — a lock screen that shuffles">
 <meta property="og:description" content="A 3×3 keypad of digit groups that reshuffles. Your PIN never leaves your head — or your fingertips.">
@@ -89,6 +89,9 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;height:6
 .card .ic{width:42px;height:42px;border-radius:12px;background:var(--palm-deep);color:#B0F1CB;display:grid;place-items:center;margin-bottom:16px}
 .card .ic svg{width:22px;height:22px}
 .card p{color:var(--husk);font-size:.95rem;margin-top:8px}
+.fp-card{grid-column:1/-1;display:flex;align-items:center;gap:28px}
+.fp-card img{flex:none;background:var(--s2);border-radius:24px;padding:14px}
+@media(max-width:560px){.fp-card{flex-direction:column;align-items:flex-start}}
 
 /* how */
 .how{background:var(--s1);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -222,6 +225,8 @@ footer a{color:var(--cream)}
       <h3>Encrypted on-device</h3><p>Your PIN lives in encrypted storage on your phone. No accounts, no servers, no analytics, no network calls.</p></div>
     <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
       <h3>Looks like it belongs</h3><p>A calm dark Material 3 design with a clock, a clear prompt and gentle haptics. Boots with your phone, ready after every restart.</p></div>
+    <div class="card fp-card"><img src="fingerprint.svg" alt="Fingerprint icon" width="96" height="96">
+      <div><h3>Fingerprint or PIN — your choice</h3><p>Turn on fingerprint unlock and touch the sensor to get in, or just use the shuffling keypad. The PIN is always there as a fallback, and the first unlock after a restart always asks for it. Off by default.</p></div></div>
   </div>
 </div></section>
 
@@ -235,6 +240,7 @@ footer a{color:var(--cream)}
       <li><div><strong>Wake your phone</strong><p>The lock appears with a freshly shuffled board.</p></div></li>
       <li><div><strong>Tap the group with your digit</strong><p>Each digit shows up on at least two buttons, so there's always more than one right answer.</p></div></li>
       <li><div><strong>Wrong tap? It reshuffles.</strong><p>The sequence resets and the board is redealt from scratch.</p></div></li>
+      <li><div><strong>Or just touch the sensor</strong><p>With fingerprint unlock turned on, the system prompt appears first. Tap “Use PIN” any time to switch to the keypad.</p></div></li>
     </ol>
   </div>
   <div class="example">
@@ -259,19 +265,20 @@ footer a{color:var(--cream)}
         <button tabindex="-1">407</button><button tabindex="-1">139</button><button tabindex="-1">652</button>
         <button tabindex="-1">816</button><button tabindex="-1">075</button><button tabindex="-1">923</button>
         <button tabindex="-1">348</button><button tabindex="-1">261</button><button tabindex="-1">597</button></div>
+      <div style="color:var(--palm);font-size:.72rem;font-weight:600;margin-top:8px">Use fingerprint</div>
       <div class="wm"><b>tumbler</b><br>by Coco Experiments</div></div></div>
-      <figcaption><b>Lock screen</b>The shuffling keypad</figcaption></figure>
+      <figcaption><b>Lock screen</b>The shuffling keypad, with optional fingerprint</figcaption></figure>
 
     <figure class="shot"><div class="phone"><div class="screen" style="padding-top:44px">
       <div class="swr"><div class="t">Lock screen is on</div><div class="s">Your screen is protected by your PIN.</div></div>
       <div class="pill"><span class="t">Enable lock screen</span><span class="sw"></span></div>
       <div class="swr" style="margin-top:16px"><div class="t" style="font-size:.8rem">Permissions</div></div>
       <div class="perm"><div><div class="t">Display over other apps</div><div class="s">Lets the lock appear when the screen turns off.</div></div><span class="ok">Granted</span></div>
-      <div class="perm"><div><div class="t">Notifications</div><div class="s">For the background service.</div></div><span class="ok">Granted</span></div>
+      <div class="perm"><div><div class="t">Unlock with fingerprint</div><div class="s">Or use your PIN.</div></div><span class="sw" style="flex:none"></span></div>
       <div class="perm"><div><div class="t">Stay locked</div><div class="s">Lock guard in Accessibility.</div></div><span class="ok">Granted</span></div>
       <div class="sp"></div>
       <div class="pbtn">Preview lock screen</div><div class="pbtn o">Change PIN</div></div></div>
-      <figcaption><b>Home</b>One switch, clear permissions</figcaption></figure>
+      <figcaption><b>Home</b>Simple switches, clear permissions</figcaption></figure>
 
     <figure class="shot"><div class="phone"><div class="screen" style="padding-top:48px">
       <div class="swr" style="text-align:center"><div class="t" style="font-size:1.05rem">Create your PIN</div><div class="s">Choose a 4-digit master PIN</div></div>
@@ -289,11 +296,12 @@ footer a{color:var(--cream)}
     <div class="eyebrow">Security, plainly</div>
     <h2>Built with honest trade-offs.</h2>
     <p class="lead">Android doesn't let any app replace the system lock. Tumbler is explicit about what it does and doesn't do.</p>
-    <div class="honest"><b>Good to know:</b> Tumbler sits above your phone's lock as an extra PIN layer. For a single unlock, set the system lock to None or Swipe — the app walks you through it, and explains the trade-off.</div>
+    <div class="honest"><b>Good to know:</b> Tumbler sits above your phone's lock as an extra PIN layer. For a single unlock, set the system lock to None or Swipe — the app walks you through it, and explains the trade-off. Fingerprint unlock is the exception: Android only enrols fingerprints when the phone has its own screen lock, so use one or the other.</div>
   </div>
   <ul class="checks">
     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>No network access to your PIN.</b> Stored locally in encrypted preferences.</div></li>
     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Optional lock guard.</b> An Accessibility service that only notices which window is in front — it can't read your screen.</div></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Fingerprint is optional.</b> Uses Android's own biometric prompt, so Tumbler never sees your fingerprint. The PIN always works, and is required after a restart.</div></li>
     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Phone calls still work.</b> The guard lets calls through.</div></li>
     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Open source.</b> Read every line on <a href="https://github.com/cocoexperiments/tumbler" style="color:var(--palm)">GitHub</a>.</div></li>
     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Escape hatch.</b> Stuck? Boot into Safe mode and uninstall.</div></li>
@@ -318,7 +326,8 @@ footer a{color:var(--cream)}
         <li>Download the APK on your phone.</li>
         <li>Open it and allow “Install unknown apps” for your browser or file manager if asked.</li>
         <li>Open Tumbler, create your PIN, and grant the permissions.</li>
-        <li>Turn on “Enable lock screen”, then press the power button twice to test.</li></ol></details>
+        <li>Turn on “Enable lock screen”, then press the power button twice to test.</li>
+        <li>Optional: turn on “Unlock with fingerprint” (needs a fingerprint enrolled in Android settings).</li></ol></details>
       <details><summary>Accessibility switch greyed out?</summary><p>On Android 13+, a sideloaded app needs one extra step: App info → ⋮ menu → Allow restricted settings. Then enable “Tumbler lock guard”.</p></details>
     </div>
   </div>
@@ -328,6 +337,7 @@ footer a{color:var(--cream)}
   <div class="center"><div class="eyebrow">FAQ</div><h2>Questions, answered.</h2></div>
   <div class="faq">
     <details><summary>Does it replace my system lock?</summary><p>No — Android doesn't allow that for any app. Tumbler appears on top of the system lock. To avoid unlocking twice, set the system lock to None or Swipe; the app explains the trade-off.</p></details>
+    <details><summary>Can I unlock with my fingerprint?</summary><p>Yes, if you turn it on in the app. You can then touch the sensor or use the PIN keypad — either works. Android only enrols fingerprints when the phone has its own screen lock, so fingerprint unlock can't be combined with setting the system lock to None. After a restart, the PIN is needed first.</p></details>
     <details><summary>Can someone guess my PIN by tapping?</summary><p>Each tap narrows a digit to three possibilities and the board reshuffles after any mistake. After five wrong taps, Tumbler adds escalating lockouts of up to 15 minutes.</p></details>
     <details><summary>Is anything sent off my device?</summary><p>No. There are no accounts or analytics, and your PIN is stored in encrypted storage on the phone.</p></details>
     <details><summary>What if I forget my PIN?</summary><p>Reboot into Safe mode, where third-party apps are disabled, then clear or uninstall Tumbler.</p></details>
