@@ -3,6 +3,7 @@ package com.cocoexperiments.tumbler.util
 import android.Manifest
 import android.app.KeyguardManager
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,6 +11,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import com.cocoexperiments.tumbler.service.LockGuardService
 
 object AppPermissions {
 
@@ -31,6 +33,16 @@ object AppPermissions {
         context.getSystemService(KeyguardManager::class.java).isDeviceSecure
 
     fun securitySettingsIntent(): Intent = Intent(Settings.ACTION_SECURITY_SETTINGS)
+
+    /** True when the user has switched on the Tumbler accessibility guard. */
+    fun isGuardEnabled(context: Context): Boolean {
+        val enabled = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+            ?: return false
+        val guard = ComponentName(context, LockGuardService::class.java)
+        return enabled.split(':').any { ComponentName.unflattenFromString(it) == guard }
+    }
+
+    fun accessibilitySettingsIntent(): Intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
 
     fun overlaySettingsIntent(context: Context): Intent =
         Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))

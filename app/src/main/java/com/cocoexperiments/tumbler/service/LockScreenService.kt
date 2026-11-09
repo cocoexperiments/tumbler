@@ -26,14 +26,18 @@ class LockScreenService : Service() {
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                Intent.ACTION_SCREEN_OFF -> LockLauncher.prelaunch(context)
-                Intent.ACTION_SCREEN_ON -> if (!LockState.isActive) LockLauncher.showNow(context)
+                Intent.ACTION_SCREEN_OFF -> {
+                    LockState.arm(context)
+                    LockLauncher.prelaunch(context)
+                }
+                Intent.ACTION_SCREEN_ON -> if (LockState.armed && !LockState.isActive) LockLauncher.showNow(context)
             }
         }
     }
 
     override fun onCreate() {
         super.onCreate()
+        LockState.load(this)
         // Must be called promptly after startForegroundService().
         ServiceCompat.startForeground(
             this,
@@ -50,15 +54,24 @@ class LockScreenService : Service() {
             },
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
+        // Restarted (boot, crash, OEM kill) while still armed: put the lock back.
+        LockLauncher.reassert(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val repository = PinRepository.get(this)
         if (intent?.action == ACTION_STOP || !repository.hasPin() || !repository.lockEnabled) {
+            LockState.disarm(this)
             stopSelf()
             return START_NOT_STICKY
         }
         return START_STICKY
+    }
+
+    /** The app was swiped out of Recents. The service normally survives; if still armed, bring the lock back. */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        LockLauncher.reassert(this)
     }
 
     override fun onDestroy() {

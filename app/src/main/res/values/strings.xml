@@ -57,4 +57,10 @@
     <string name="brand_byline">by Coco Experiments</string>
     <string name="brand_tagline">Simple, purposeful security.</string>
     <string name="brand_footer">A Coco Experiments product \u00B7 cocoexperiments.com</string>
+
+    <!-- Lock guard (accessibility) -->
+    <string name="perm_guard_title">Stay locked (recommended)</string>
+    <string name="perm_guard_desc">Turn on the Tumbler lock guard in Accessibility settings. It only notices when another app, Home or Recents comes forward while your phone is locked, and brings the lock back. It cannot read your screen, and nothing leaves your phone. If the switch is greyed out: App info, menu, Allow restricted settings.</string>
+    <string name="guard_service_label">Tumbler lock guard</string>
+    <string name="guard_service_description">Brings the Tumbler lock screen back if another app, Home or Recents appears while your phone is locked. It does not read screen content.</string>
 </resources>

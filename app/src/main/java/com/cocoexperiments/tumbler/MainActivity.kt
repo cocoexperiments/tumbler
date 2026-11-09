@@ -82,6 +82,7 @@ class MainActivity : ComponentActivity() {
                             onPreview = { LockLauncher.showNow(context) },
                             onChangePin = { changingPin = true },
                             onOpenSecuritySettings = { startActivity(AppPermissions.securitySettingsIntent()) },
+                            onEnableGuard = { startActivity(AppPermissions.accessibilitySettingsIntent()) },
                             onOpenWebsite = { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Brand.COMPANY_URL))) },
                         )
                     }

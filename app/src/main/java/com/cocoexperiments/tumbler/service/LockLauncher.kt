@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.cocoexperiments.tumbler.TumblerApp
@@ -18,7 +19,9 @@ import com.cocoexperiments.tumbler.util.AppPermissions
  */
 object LockLauncher {
     const val EXTRA_WAKE_SCREEN = "extra_wake_screen"
+    const val EXTRA_REASSERT = "extra_reassert"
     const val NOTIFICATION_ID = 2001
+    private const val REASSERT_DEBOUNCE_MS = 400L
 
     /**
      * Called on SCREEN_OFF. The activity is created now so it is already waiting above the keyguard
@@ -35,13 +38,31 @@ object LockLauncher {
         postFullScreenNotification(context)
     }
 
-    private fun intent(context: Context, wakeScreen: Boolean) =
+    @Volatile
+    private var lastReassert = 0L
+
+    /**
+     * Brings the lock back in front if the user left it (Home, Recents, another app, swiping the
+     * app away) while still armed. No-op while the lock is already on screen. Debounced so the
+     * activity, the service and the accessibility guard cannot trigger a launch loop.
+     */
+    fun reassert(context: Context) {
+        if (!LockState.armed || LockState.isForeground) return
+        if (!AppPermissions.canDrawOverlays(context)) return
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastReassert < REASSERT_DEBOUNCE_MS) return
+        lastReassert = now
+        start(context, wakeScreen = false, reassert = true)
+    }
+
+    private fun intent(context: Context, wakeScreen: Boolean, reassert: Boolean = false) =
         Intent(context, LockScreenActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
             .putExtra(EXTRA_WAKE_SCREEN, wakeScreen)
+            .putExtra(EXTRA_REASSERT, reassert)
 
-    private fun start(context: Context, wakeScreen: Boolean) {
-        runCatching { context.startActivity(intent(context, wakeScreen)) }
+    private fun start(context: Context, wakeScreen: Boolean, reassert: Boolean = false) {
+        runCatching { context.startActivity(intent(context, wakeScreen, reassert)) }
     }
 
     @SuppressLint("MissingPermission") // guarded by areNotificationsEnabled()

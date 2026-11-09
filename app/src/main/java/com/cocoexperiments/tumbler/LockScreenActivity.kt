@@ -69,6 +69,8 @@ class LockScreenActivity : ComponentActivity() {
     /** Re-launched while already alive (e.g. screen turned off and on again): start a new attempt. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // A bring-to-front from the guard must not reset digits or reshuffle while the user is typing.
+        if (intent.getBooleanExtra(LockLauncher.EXTRA_REASSERT, false)) return
         setIntent(intent)
         applyWake(intent)
         viewModel.newAttempt()
@@ -80,7 +82,24 @@ class LockScreenActivity : ComponentActivity() {
         viewModel.newAttempt()
     }
 
+    override fun onResume() {
+        super.onResume()
+        LockState.isForeground = true
+    }
+
+    override fun onPause() {
+        LockState.isForeground = false
+        super.onPause()
+    }
+
+    /** Left via Home, Recents or another app while still locked: come straight back. */
+    override fun onStop() {
+        super.onStop()
+        if (!isFinishing) LockLauncher.reassert(this)
+    }
+
     override fun onDestroy() {
+        LockState.isForeground = false
         LockState.isActive = false
         super.onDestroy()
     }
@@ -114,6 +133,7 @@ class LockScreenActivity : ComponentActivity() {
      * appears) and then remove this activity.
      */
     private fun dismissLockScreen() {
+        LockState.disarm(this) // before finishing, so onStop() does not relaunch the lock
         val keyguard = getSystemService(KeyguardManager::class.java)
         if (keyguard.isKeyguardLocked) {
             keyguard.requestDismissKeyguard(

@@ -42,6 +42,7 @@ fun HomeScreen(
     onChangePin: () -> Unit,
     onOpenSecuritySettings: () -> Unit,
     onOpenWebsite: () -> Unit,
+    onEnableGuard: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -113,6 +114,8 @@ fun HomeScreen(
                 onRequestFullScreen,
             )
         }
+
+        PermissionRow(R.string.perm_guard_title, R.string.perm_guard_desc, state.guardEnabled, onEnableGuard)
 
         Spacer(Modifier.height(4.dp))
         Button(onClick = onPreview, modifier = Modifier.fillMaxWidth()) {

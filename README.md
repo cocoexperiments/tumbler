@@ -32,3 +32,10 @@ Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotl
 - The Home/Recents buttons cannot be blocked without Device Owner / Lock Task mode.
 - `androidx.security:security-crypto` is deprecated upstream but still works; USE_FULL_SCREEN_INTENT is restricted on Google Play to calling/alarm apps.
 - Aggressive OEM battery managers may kill the service; exclude the app from battery optimisation.
+
+## Staying locked (Home / Recents / swipe-away)
+- The lock activity is excluded from Recents and lives in its own task.
+- A persisted "armed" flag is set on screen-off and boot and cleared only by a correct PIN, so killing the app or leaving the lock screen does not unlock anything; the lock is brought back.
+- Optional but recommended: enable **Tumbler lock guard** in Accessibility settings. It only watches window changes (no screen content) and re-shows the lock when Home, Recents or another app comes forward. Phone calls are allowed through. On Android 13+ a sideloaded APK needs *App info > menu > Allow restricted settings* first.
+- If you are ever stuck behind the lock, reboot into Safe mode (third-party apps are disabled) and uninstall or clear the app.
+- Not used on purpose: `noHistory` (it would destroy the lock on screen-off), `ACTION_CLOSE_SYSTEM_DIALOGS` (blocked for apps since Android 12) and Lock Task mode (needs Device Owner, otherwise it shows a pin prompt on every unlock).

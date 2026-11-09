@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.cocoexperiments.tumbler.data.PinRepository
 import com.cocoexperiments.tumbler.service.LockScreenService
+import com.cocoexperiments.tumbler.service.LockState
 import com.cocoexperiments.tumbler.util.AppPermissions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ data class MainUiState(
     val notificationsGranted: Boolean = false,
     val fullScreenGranted: Boolean = false,
     val systemLockSecure: Boolean = false,
+    val guardEnabled: Boolean = false,
 ) {
     val allPermissionsGranted: Boolean get() = overlayGranted && notificationsGranted && fullScreenGranted
 }
@@ -42,6 +44,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 notificationsGranted = AppPermissions.hasNotifications(context),
                 fullScreenGranted = AppPermissions.canUseFullScreenIntent(context),
                 systemLockSecure = AppPermissions.isSystemLockSecure(context),
+                guardEnabled = AppPermissions.isGuardEnabled(context),
             )
         }
     }
@@ -61,6 +64,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             LockScreenService.start(context)
         } else {
             repository.lockEnabled = false
+            LockState.disarm(context)
             LockScreenService.stop(context)
         }
         refresh()

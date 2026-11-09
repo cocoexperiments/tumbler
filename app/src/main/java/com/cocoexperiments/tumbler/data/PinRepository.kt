@@ -46,6 +46,13 @@ class PinRepository private constructor(private val appContext: Context) {
             prefs.edit().putBoolean(KEY_ENABLED, value).commit()
         }
 
+    /** True from screen-off/boot until a correct PIN is entered. Persisted so a killed process cannot be used to skip the lock. */
+    var lockArmed: Boolean
+        get() = prefs.getBoolean(KEY_ARMED, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_ARMED, value).apply()
+        }
+
     /** Registers a wrong tap and starts a lockout when the policy demands one. */
     fun recordFailure() {
         val failures = prefs.getInt(KEY_FAILURES, 0) + 1
@@ -98,6 +105,7 @@ class PinRepository private constructor(private val appContext: Context) {
         private const val FILE_NAME = "tumbler_secure_prefs"
         private const val KEY_PIN = "master_pin"
         private const val KEY_ENABLED = "lock_enabled"
+        private const val KEY_ARMED = "lock_armed"
         private const val KEY_FAILURES = "failed_attempts"
         private const val KEY_LOCKOUT_UNTIL = "lockout_until"
 
