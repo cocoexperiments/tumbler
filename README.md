@@ -1,10 +1,13 @@
 # Tumbler
 
+<p align="center"><img src="docs/logo.png" width="128" alt="Tumbler logo"></p>
+
 **tumbler** - a Coco Experiments product (https://cocoexperiments.com). Simple, purposeful security.
 
 Compose + Material 3 (dark) PIN lock screen with a shuffling 3x3 "digit group" keypad. The board shuffles when the lock opens and after a wrong tap, and stays fixed while you enter correct digits.
 
 ## Brand
+The logo is a padlock whose body is the 3x3 keypad. `logo/gen_logo.py <repo root>` regenerates the launcher icon, the in-app logo and `docs/logo.svg` from one set of parameters (re-export `docs/logo.png` from the SVG if you change it).
 All brand colours live in `ui/theme/Brand.kt` (plus the launcher icon in `res/drawable/ic_launcher_*.xml` and `res/values/colors.xml`). Replace them with official Coco Experiments values when available.
 
 ## One lock instead of two
