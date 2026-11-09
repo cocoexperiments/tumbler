@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tumbler — a lock screen that shuffles</title>
+<meta name="description" content="Tumbler is an Android PIN lock screen with a shuffling keypad of digit groups. Nobody can read your PIN from your fingers. A Coco Experiments product.">
+<meta name="theme-color" content="#0F1210">
+<meta property="og:title" content="Tumbler — a lock screen that shuffles">
+<meta property="og:description" content="A 3×3 keypad of digit groups that reshuffles. Your PIN never leaves your head — or your fingertips.">
+<meta property="og:type" content="website">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+:root{
+  --ink:#0F1210;--s1:#171C19;--s2:#1E2421;--s3:#272E2A;--line:#2f3833;
+  --palm:#8FD6B0;--palm-deep:#1F4D38;--on-palm:#00391F;
+  --cream:#ECEAE0;--husk:#A7B0A9;--err:#FF6B6B;
+  --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--cream);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+section{padding:88px 0}
+h1,h2,h3{line-height:1.12;letter-spacing:-.02em;font-weight:700}
+h1{font-size:clamp(2.6rem,7vw,4.6rem)}
+h2{font-size:clamp(1.9rem,4.5vw,2.9rem);margin-bottom:14px}
+h3{font-size:1.15rem;letter-spacing:-.01em}
+.lead{color:var(--husk);font-size:1.15rem;max-width:620px}
+.eyebrow{color:var(--palm);font-size:.8rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:14px}
+.accent{color:var(--palm)}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:rgba(15,18,16,.8);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.05)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;font-size:1.1rem;letter-spacing:-.01em}
+.brand img{width:30px;height:30px;border-radius:8px}
+.navlinks{display:flex;gap:26px;align-items:center;font-size:.92rem;color:var(--husk)}
+.navlinks a{text-decoration:none}.navlinks a:hover{color:var(--cream)}
+@media(max-width:700px){.navlinks a:not(.btn){display:none}}
+
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--palm);color:var(--on-palm);font-weight:700;text-decoration:none;padding:13px 22px;border-radius:999px;border:0;font-size:1rem;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(143,214,176,.28)}
+.btn.ghost{background:transparent;color:var(--cream);border:1px solid var(--line)}
+.btn.ghost:hover{box-shadow:none;border-color:var(--palm);color:var(--palm)}
+.btn.sm{padding:9px 16px;font-size:.9rem}
+
+/* hero */
+.hero{padding:72px 0 40px;position:relative}
+.hero::before{content:"";position:absolute;inset:-10% -10% auto;height:620px;background:radial-gradient(520px 340px at 70% 30%,rgba(143,214,176,.16),transparent 70%),radial-gradient(400px 300px at 15% 10%,rgba(31,77,56,.5),transparent 70%);pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:40px;align-items:center;position:relative}
+.hero p.lead{margin:22px 0 32px}
+.cta{display:flex;flex-wrap:wrap;gap:12px}
+.hero small{display:block;margin-top:18px;color:var(--husk);font-size:.85rem}
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr}.hero-phone{order:-1}.hero{padding-top:40px}}
+
+/* phone */
+.phone{width:290px;max-width:100%;aspect-ratio:9/19;margin:0 auto;border-radius:44px;background:#050706;padding:10px;border:1px solid #2b332f;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.03),0 0 120px rgba(143,214,176,.10);position:relative}
+.screen{width:100%;height:100%;border-radius:35px;overflow:hidden;background:linear-gradient(#1E2421,#0F1210);display:flex;flex-direction:column;align-items:center;padding:34px 16px 16px;position:relative}
+.screen::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);width:76px;height:20px;background:#050706;border-radius:12px}
+.clock{font-size:3.1rem;font-weight:300;line-height:1;margin-top:18px;letter-spacing:-.02em}
+.date{color:var(--husk);font-size:.85rem;margin-top:6px}
+.sp{flex:1}
+.prompt{color:var(--husk);font-size:.72rem;text-align:center;max-width:210px;line-height:1.35}
+.step{color:var(--palm);font-size:.75rem;font-weight:600;margin-top:6px}
+.dots{display:flex;gap:12px;margin:12px 0 12px}
+.dots i{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--husk);transition:.2s}
+.dots i.on{background:var(--palm);border-color:var(--palm);box-shadow:0 0 10px rgba(143,214,176,.6)}
+.dots.err i{border-color:var(--err);background:transparent}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.pad button{aspect-ratio:1.18;border-radius:16px;border:1px solid var(--line);background:var(--s3);color:var(--cream);font:600 1rem/1 inherit;font-family:inherit;letter-spacing:.14em;cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;padding-left:.14em}
+.pad button:hover{background:#31393a}
+.pad button:active{transform:scale(.95);background:var(--palm-deep)}
+.pad.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.wm{margin-top:12px;font-size:.62rem;color:var(--husk);opacity:.7;text-align:center;letter-spacing:.04em}
+.wm b{color:var(--cream);font-size:.78rem;letter-spacing:.02em}
+.hint{text-align:center;color:var(--husk);font-size:.8rem;margin-top:18px}
+.hint b{color:var(--palm)}
+
+/* cards */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:44px}
+@media(max-width:860px){.grid3{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.grid3,.grid2{grid-template-columns:1fr}}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:26px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:rgba(143,214,176,.45);transform:translateY(-2px)}
+.card .ic{width:42px;height:42px;border-radius:12px;background:var(--palm-deep);color:#B0F1CB;display:grid;place-items:center;margin-bottom:16px}
+.card .ic svg{width:22px;height:22px}
+.card p{color:var(--husk);font-size:.95rem;margin-top:8px}
+
+/* how */
+.how{background:var(--s1);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+@media(max-width:860px){.how-grid{grid-template-columns:1fr}}
+.steps{list-style:none;counter-reset:s;margin-top:28px;display:grid;gap:18px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:40px 1fr;gap:14px}
+.steps li::before{content:counter(s);width:34px;height:34px;border-radius:50%;background:var(--palm);color:var(--on-palm);font-weight:700;display:grid;place-items:center}
+.steps p{color:var(--husk);font-size:.95rem}
+.steps strong{display:block}
+.example{background:var(--ink);border:1px solid var(--line);border-radius:var(--r);padding:24px}
+.example .row{display:flex;gap:8px;margin:10px 0 18px}
+.mini{flex:1;padding:14px 0;border-radius:12px;border:1px solid var(--line);background:var(--s3);text-align:center;letter-spacing:.14em;font-weight:600;color:var(--husk)}
+.mini.hit{border-color:var(--palm);color:var(--palm);background:rgba(143,214,176,.08)}
+.example .cap{font-size:.85rem;color:var(--husk)}
+
+/* shots */
+.shots{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-top:52px}
+.shot{text-align:center}
+.shot .phone{width:250px}
+.shot .screen{padding:30px 14px 14px;font-size:.9rem}
+.shot figcaption{margin-top:16px;color:var(--husk);font-size:.9rem}
+.shot figcaption b{color:var(--cream);display:block}
+.swr{width:100%;text-align:left}
+.swr .t{font-weight:600;font-size:.95rem}
+.swr .s{color:var(--husk);font-size:.68rem;margin-top:2px}
+.pill{background:var(--palm-deep);color:#B0F1CB;border-radius:18px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.pill .t{font-size:.82rem}
+.sw{width:34px;height:20px;border-radius:12px;background:var(--palm);position:relative}
+.sw::after{content:"";position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--on-palm)}
+.perm{background:var(--s2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left}
+.perm .t{font-size:.74rem;font-weight:600}.perm .s{font-size:.6rem;color:var(--husk);line-height:1.3}
+.ok{font-size:.62rem;color:var(--palm);font-weight:700;white-space:nowrap}
+.fb{font-size:.62rem;background:var(--s3);border-radius:10px;padding:5px 9px;white-space:nowrap}
+.pbtn{margin-top:12px;width:100%;padding:10px;border-radius:999px;background:var(--palm);color:var(--on-palm);font-weight:700;font-size:.8rem;text-align:center}
+.pbtn.o{background:transparent;border:1px solid var(--line);color:var(--cream);margin-top:8px}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:100%;margin-top:12px}
+.kp span{aspect-ratio:1.4;border-radius:50%;background:var(--s3);display:grid;place-items:center;font-size:1.1rem}
+.kp span.z{grid-column:2}
+.note{margin-top:18px;font-size:.64rem;color:var(--husk);line-height:1.4;text-align:left}
+.shotnote{text-align:center;color:var(--husk);font-size:.82rem;margin-top:34px}
+
+/* security */
+.sec{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+@media(max-width:860px){.sec{grid-template-columns:1fr}}
+.checks{list-style:none;display:grid;gap:14px;margin-top:6px}
+.checks li{display:grid;grid-template-columns:26px 1fr;gap:10px;color:var(--husk)}
+.checks li b{color:var(--cream)}
+.checks svg{width:22px;height:22px;color:var(--palm);margin-top:2px}
+.honest{margin-top:26px;border-left:3px solid var(--palm);background:var(--s1);padding:16px 18px;border-radius:0 14px 14px 0;font-size:.92rem;color:var(--husk)}
+.honest b{color:var(--cream)}
+
+/* download */
+.dl{background:radial-gradient(600px 280px at 50% 0,rgba(143,214,176,.14),transparent 70%),var(--s1);border:1px solid var(--line);border-radius:28px;padding:56px 28px;text-align:center}
+.dl .lead{margin:12px auto 28px}
+.dl .cta{justify-content:center}
+.meta{display:flex;gap:10px 24px;justify-content:center;flex-wrap:wrap;margin-top:26px;color:var(--husk);font-size:.85rem}
+.meta span::before{content:"•";color:var(--palm);margin-right:8px}
+.install{max-width:620px;margin:44px auto 0;text-align:left;display:grid;gap:12px}
+.install details{background:var(--ink);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+.install summary{cursor:pointer;font-weight:600}
+.install p,.install ol{color:var(--husk);font-size:.92rem;margin-top:10px}
+.install ol{padding-left:20px}
+
+/* faq */
+.faq{max-width:760px;margin:36px auto 0;display:grid;gap:10px}
+.faq details{background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+.faq summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::after{content:"+";color:var(--palm);font-size:1.3rem;line-height:1}
+.faq details[open] summary::after{content:"–"}
+.faq p{color:var(--husk);margin-top:10px;font-size:.95rem}
+.center{text-align:center}.center .lead{margin:0 auto}
+
+footer{border-top:1px solid var(--line);padding:40px 0;color:var(--husk);font-size:.9rem}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+footer a{color:var(--cream)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top"><img src="logo.svg" alt="">tumbler</a>
+  <div class="navlinks">
+    <a href="#features">Features</a><a href="#how">How it works</a><a href="#screens">Screens</a><a href="#faq">FAQ</a>
+    <a class="btn sm" href="#download">Download</a>
+  </div>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap hero-grid">
+  <div>
+    <div class="eyebrow">Android lock screen · by Coco Experiments</div>
+    <h1>A lock screen that <span class="accent">shuffles</span>.</h1>
+    <p class="lead">Tumbler swaps the old numeric keypad for nine buttons of digit groups that reshuffle every time. Anyone watching your thumb sees taps — never your PIN.</p>
+    <div class="cta">
+      <a class="btn" href="#download">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+        Download for Android</a>
+      <a class="btn ghost" href="#how">See how it works</a>
+    </div>
+    <small>Free · No account · Nothing leaves your phone</small>
+  </div>
+  <div class="hero-phone">
+    <div class="phone"><div class="screen" id="demo">
+      <div class="clock" id="clk">9:41</div><div class="date" id="dte">Monday, 9 November</div>
+      <div class="sp"></div>
+      <div class="prompt">Tap the button that contains the next digit of your PIN</div>
+      <div class="step" id="stp">Digit 1 of 4</div>
+      <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+      <div class="pad" id="pad"></div>
+      <div class="wm"><b>tumbler</b><br>by Coco Experiments</div>
+    </div></div>
+    <p class="hint">Try it live — the demo PIN is <b>2 · 5 · 8 · 0</b></p>
+  </div>
+</div></header>
+
+<section id="features"><div class="wrap">
+  <div class="center"><div class="eyebrow">Why Tumbler</div>
+  <h2>Simple on the surface. Stubborn underneath.</h2>
+  <p class="lead">Built around one idea — your PIN shouldn't be readable from the outside — and the unglamorous details that make a lock actually hold.</p></div>
+  <div class="grid3">
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></div>
+      <h3>Shuffling digit groups</h3><p>A 3×3 board where each button carries three digits. It reshuffles when the lock opens and after every wrong tap.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg></div>
+      <h3>Shoulder-surf resistant</h3><p>Tap positions say nothing about digits. Smudges, cameras and glances reveal far less than on a fixed keypad.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h3>Stays locked</h3><p>Kill the app, swipe it away, tap Home or Recents — Tumbler re-arms and brings the lock back until the right PIN is entered.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 4v6c0 5-3.8 8.7-9 10-5.2-1.3-9-5-9-10V6l9-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3>Brute-force lockout</h3><p>After five wrong taps, escalating lockouts kick in — 30 seconds, then longer, up to 15 minutes.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2m-4 4 3 3m-6 0 2 2"/></svg></div>
+      <h3>Encrypted on-device</h3><p>Your PIN lives in encrypted storage on your phone. No accounts, no servers, no analytics, no network calls.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <h3>Looks like it belongs</h3><p>A calm dark Material 3 design with a clock, a clear prompt and gentle haptics. Boots with your phone, ready after every restart.</p></div>
+  </div>
+</div></section>
+
+<section class="how" id="how"><div class="wrap how-grid">
+  <div>
+    <div class="eyebrow">How it works</div>
+    <h2>Tap the button that holds your digit.</h2>
+    <p class="lead">Your PIN is four digits. You never type digits — you pick which group contains the next one.</p>
+    <ol class="steps">
+      <li><div><strong>Create a 4-digit PIN</strong><p>Set it once, confirm it, done.</p></div></li>
+      <li><div><strong>Wake your phone</strong><p>The lock appears with a freshly shuffled board.</p></div></li>
+      <li><div><strong>Tap the group with your digit</strong><p>Each digit shows up on at least two buttons, so there's always more than one right answer.</p></div></li>
+      <li><div><strong>Wrong tap? It reshuffles.</strong><p>The sequence resets and the board is redealt from scratch.</p></div></li>
+    </ol>
+  </div>
+  <div class="example">
+    <div class="eyebrow">Example · PIN 2580</div>
+    <p class="cap">Digit 1 is <b class="accent">2</b>. Two of these buttons contain it — either works:</p>
+    <div class="row"><div class="mini hit">274</div><div class="mini">918</div><div class="mini hit">325</div></div>
+    <p class="cap">Next, digit 2 is <b class="accent">5</b>. The board has reshuffled:</p>
+    <div class="row"><div class="mini">603</div><div class="mini hit">581</div><div class="mini">479</div></div>
+    <p class="cap">Someone watching sees you tap the middle, then the left. That tells them almost nothing.</p>
+  </div>
+</div></section>
+
+<section id="screens"><div class="wrap">
+  <div class="center"><div class="eyebrow">Screens</div><h2>Quiet, clear, focused.</h2>
+  <p class="lead">One screen to set up, one to guard your phone.</p></div>
+  <div class="shots">
+    <figure class="shot"><div class="phone"><div class="screen">
+      <div class="clock" style="font-size:2.6rem">9:41</div><div class="date">Monday, 9 November</div><div class="sp"></div>
+      <div class="prompt">Tap the button that contains the next digit of your PIN</div><div class="step">Digit 3 of 4</div>
+      <div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <div class="pad" style="gap:6px">
+        <button tabindex="-1">407</button><button tabindex="-1">139</button><button tabindex="-1">652</button>
+        <button tabindex="-1">816</button><button tabindex="-1">075</button><button tabindex="-1">923</button>
+        <button tabindex="-1">348</button><button tabindex="-1">261</button><button tabindex="-1">597</button></div>
+      <div class="wm"><b>tumbler</b><br>by Coco Experiments</div></div></div>
+      <figcaption><b>Lock screen</b>The shuffling keypad</figcaption></figure>
+
+    <figure class="shot"><div class="phone"><div class="screen" style="padding-top:44px">
+      <div class="swr"><div class="t">Lock screen is on</div><div class="s">Your screen is protected by your PIN.</div></div>
+      <div class="pill"><span class="t">Enable lock screen</span><span class="sw"></span></div>
+      <div class="swr" style="margin-top:16px"><div class="t" style="font-size:.8rem">Permissions</div></div>
+      <div class="perm"><div><div class="t">Display over other apps</div><div class="s">Lets the lock appear when the screen turns off.</div></div><span class="ok">Granted</span></div>
+      <div class="perm"><div><div class="t">Notifications</div><div class="s">For the background service.</div></div><span class="ok">Granted</span></div>
+      <div class="perm"><div><div class="t">Stay locked</div><div class="s">Lock guard in Accessibility.</div></div><span class="ok">Granted</span></div>
+      <div class="sp"></div>
+      <div class="pbtn">Preview lock screen</div><div class="pbtn o">Change PIN</div></div></div>
+      <figcaption><b>Home</b>One switch, clear permissions</figcaption></figure>
+
+    <figure class="shot"><div class="phone"><div class="screen" style="padding-top:48px">
+      <div class="swr" style="text-align:center"><div class="t" style="font-size:1.05rem">Create your PIN</div><div class="s">Choose a 4-digit master PIN</div></div>
+      <div class="dots" style="margin:18px 0 6px"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <div class="sp"></div>
+      <div class="kp"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="z">0</span></div>
+      <div class="note">Android doesn't let apps replace the system lock. Tumbler appears on top of it as an extra PIN layer.</div></div></div>
+      <figcaption><b>PIN setup</b>Create it once, confirm it</figcaption></figure>
+  </div>
+  <p class="shotnote">Illustrative renderings of the app's screens.</p>
+</div></section>
+
+<section class="how"><div class="wrap sec">
+  <div>
+    <div class="eyebrow">Security, plainly</div>
+    <h2>Built with honest trade-offs.</h2>
+    <p class="lead">Android doesn't let any app replace the system lock. Tumbler is explicit about what it does and doesn't do.</p>
+    <div class="honest"><b>Good to know:</b> Tumbler sits above your phone's lock as an extra PIN layer. For a single unlock, set the system lock to None or Swipe — the app walks you through it, and explains the trade-off.</div>
+  </div>
+  <ul class="checks">
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>No network access to your PIN.</b> Stored locally in encrypted preferences.</div></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Optional lock guard.</b> An Accessibility service that only notices which window is in front — it can't read your screen.</div></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Phone calls still work.</b> The guard lets calls through.</div></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Open source.</b> Read every line on <a href="https://github.com/cocoexperiments/tumbler" style="color:var(--palm)">GitHub</a>.</div></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Escape hatch.</b> Stuck? Boot into Safe mode and uninstall.</div></li>
+  </ul>
+</div></section>
+
+<section id="download"><div class="wrap">
+  <div class="dl">
+    <div class="eyebrow">Download</div>
+    <h2>Get Tumbler for Android.</h2>
+    <p class="lead">Install the APK directly on your phone. Requires Android 8.0 (API 26) or newer.</p>
+    <div class="cta">
+      <a class="btn" id="apk" href="https://github.com/cocoexperiments/tumbler/releases/latest">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+        <span id="apkl">Download latest APK</span></a>
+      <a class="btn ghost" href="https://github.com/cocoexperiments/tumbler/releases">All versions</a>
+      <a class="btn ghost" href="https://github.com/cocoexperiments/tumbler">View source</a>
+    </div>
+    <div class="meta"><span id="ver">Latest release</span><span>Android 8.0+</span><span>Free</span><span>Sideload (APK)</span></div>
+    <div class="install">
+      <details><summary>How to install</summary><ol>
+        <li>Download the APK on your phone.</li>
+        <li>Open it and allow “Install unknown apps” for your browser or file manager if asked.</li>
+        <li>Open Tumbler, create your PIN, and grant the permissions.</li>
+        <li>Turn on “Enable lock screen”, then press the power button twice to test.</li></ol></details>
+      <details><summary>Accessibility switch greyed out?</summary><p>On Android 13+, a sideloaded app needs one extra step: App info → ⋮ menu → Allow restricted settings. Then enable “Tumbler lock guard”.</p></details>
+    </div>
+  </div>
+</div></section>
+
+<section id="faq" style="padding-top:20px"><div class="wrap">
+  <div class="center"><div class="eyebrow">FAQ</div><h2>Questions, answered.</h2></div>
+  <div class="faq">
+    <details><summary>Does it replace my system lock?</summary><p>No — Android doesn't allow that for any app. Tumbler appears on top of the system lock. To avoid unlocking twice, set the system lock to None or Swipe; the app explains the trade-off.</p></details>
+    <details><summary>Can someone guess my PIN by tapping?</summary><p>Each tap narrows a digit to three possibilities and the board reshuffles after any mistake. After five wrong taps, Tumbler adds escalating lockouts of up to 15 minutes.</p></details>
+    <details><summary>Is anything sent off my device?</summary><p>No. There are no accounts or analytics, and your PIN is stored in encrypted storage on the phone.</p></details>
+    <details><summary>What if I forget my PIN?</summary><p>Reboot into Safe mode, where third-party apps are disabled, then clear or uninstall Tumbler.</p></details>
+    <details><summary>Is it on Google Play?</summary><p>Not yet. Full-screen lock apps face Play restrictions, so for now Tumbler is distributed as an APK on GitHub.</p></details>
+    <details><summary>Who makes it?</summary><p>Tumbler is a <a href="https://cocoexperiments.com" style="color:var(--palm)">Coco Experiments</a> product — built on simplicity, purpose and quality.</p></details>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="brand"><img src="logo.svg" alt="">tumbler <span style="font-weight:400;color:var(--husk)">· Simple, purposeful security.</span></div>
+  <div>A <a href="https://cocoexperiments.com">Coco Experiments</a> product · <a href="https://github.com/cocoexperiments/tumbler">GitHub</a></div>
+</div></footer>
+
+<script>
+(function(){
+  // live clock
+  var c=document.getElementById('clk'),d=document.getElementById('dte');
+  function tick(){var n=new Date();c.textContent=n.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    d.textContent=n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});}
+  tick();setInterval(tick,30000);
+
+  // board generator: 0-9 twice + 7 extra distinct digits, shuffled into 9 groups of 3 distinct digits
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
+  function board(){
+    var D=[0,1,2,3,4,5,6,7,8,9];
+    for(var k=0;k<64;k++){
+      var pool=D.concat(D).concat(shuffle(D.slice()).slice(0,7));shuffle(pool);
+      var g=[],ok=true;
+      for(var i=0;i<27;i+=3){var s=pool.slice(i,i+3);if(new Set(s).size<3){ok=false;break}g.push(s)}
+      if(ok)return g;
+    }
+    return board();
+  }
+  var PIN=[2,5,8,0],step=0,groups,pad=document.getElementById('pad'),dots=document.querySelectorAll('#dots i'),
+      dEl=document.getElementById('dots'),stp=document.getElementById('stp'),busy=false;
+  function render(){
+    pad.innerHTML='';
+    groups.forEach(function(g,i){var b=document.createElement('button');b.textContent=g.join('');b.setAttribute('aria-label','Digits '+g.join(', '));
+      b.onclick=function(){tap(i)};pad.appendChild(b)});
+    dots.forEach(function(x,i){x.className=i<step?'on':''});
+    stp.textContent='Digit '+Math.min(step+1,4)+' of 4';
+  }
+  function tap(i){
+    if(busy)return;
+    if(groups[i].indexOf(PIN[step])>-1){
+      step++;
+      if(step===4){busy=true;stp.textContent='Unlocked ✓';dots.forEach(function(x){x.className='on'});
+        setTimeout(function(){step=0;groups=board();busy=false;render()},1600);return}
+      groups=groups; // fixed while entering correct digits
+      dots.forEach(function(x,j){x.className=j<step?'on':''});stp.textContent='Digit '+(step+1)+' of 4';
+    }else{
+      step=0;busy=true;dEl.classList.add('err');pad.classList.add('shake');
+      setTimeout(function(){dEl.classList.remove('err');pad.classList.remove('shake');groups=board();busy=false;render()},380);
+    }
+  }
+  groups=board();render();
+
+  // latest release label (best effort; link works either way)
+  try{
+    fetch('https://api.github.com/repos/cocoexperiments/tumbler/releases/latest').then(function(r){return r.ok?r.json():null}).then(function(j){
+      if(!j)return;
+      var a=(j.assets||[]).filter(function(x){return /\.apk$/i.test(x.name)})[0];
+      if(a){document.getElementById('apk').href=a.browser_download_url;document.getElementById('apkl').textContent='Download '+j.tag_name+' (APK)'}
+      document.getElementById('ver').textContent=j.tag_name+' · '+new Date(j.published_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+    }).catch(function(){});
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
