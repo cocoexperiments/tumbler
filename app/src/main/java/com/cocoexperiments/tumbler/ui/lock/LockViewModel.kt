@@ -56,7 +56,7 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
         newAttempt()
     }
 
-    /** Starts a fresh attempt: step 0 and a freshly shuffled board. Called on every lock-screen show. */
+    /** Starts a fresh attempt: step 0 and a freshly shuffled board. The board is also reshuffled after a wrong tap, but not after correct digits. */
     fun newAttempt() {
         val pin = repository.readPin()
         if (pin == null) {
@@ -77,8 +77,9 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
         val group = current.groups.getOrNull(index) ?: return
 
         when (val result = activeSession.onGroupSelected(group)) {
+            // Correct digit: the board stays put for the rest of this attempt.
             is TapResult.Advanced ->
-                _state.update { it.copy(step = result.step, groups = generator.generate()) }
+                _state.update { it.copy(step = result.step) }
 
             TapResult.Completed -> {
                 repository.clearFailures()
