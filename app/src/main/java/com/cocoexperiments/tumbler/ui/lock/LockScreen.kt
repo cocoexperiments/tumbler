@@ -1,7 +1,7 @@
 package com.cocoexperiments.tumbler.ui.lock
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -83,14 +83,17 @@ fun LockScreen(
         Spacer(Modifier.height(20.dp))
         PinDots(length = state.pinLength, filled = state.step, isError = state.isError)
 
+        val lockoutAlpha by animateFloatAsState(
+            targetValue = if (state.lockoutSeconds > 0) 1f else 0f,
+            label = "lockoutAlpha",
+        )
         Box(Modifier.height(36.dp), contentAlignment = Alignment.Center) {
-            AnimatedVisibility(visible = state.lockoutSeconds > 0) {
-                Text(
-                    text = stringResource(R.string.lock_lockout, state.lockoutSeconds),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.error,
-                )
-            }
+            Text(
+                text = stringResource(R.string.lock_lockout, state.lockoutSeconds),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.error,
+                modifier = Modifier.graphicsLayer { alpha = lockoutAlpha },
+            )
         }
 
         KeypadGrid(
