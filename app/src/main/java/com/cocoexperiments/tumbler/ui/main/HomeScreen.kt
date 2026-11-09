@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cocoexperiments.tumbler.R
+import com.cocoexperiments.tumbler.ui.components.CompanyFooter
+import com.cocoexperiments.tumbler.ui.components.Wordmark
 
 @Composable
 fun HomeScreen(
@@ -39,6 +41,7 @@ fun HomeScreen(
     onPreview: () -> Unit,
     onChangePin: () -> Unit,
     onOpenSecuritySettings: () -> Unit,
+    onOpenWebsite: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -55,7 +58,7 @@ fun HomeScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
+        Wordmark(large = true)
 
         Surface(shape = RoundedCornerShape(28.dp), color = statusColor) {
             Row(
@@ -123,6 +126,7 @@ fun HomeScreen(
             style = MaterialTheme.typography.bodySmall,
             color = colors.onSurfaceVariant,
         )
+        CompanyFooter(onClick = onOpenWebsite, modifier = Modifier.align(Alignment.CenterHorizontally))
     }
 }
 

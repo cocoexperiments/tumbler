@@ -51,4 +51,10 @@
     <string name="system_lock_action">Open security settings</string>
     <string name="system_lock_only_title">Tumbler is your only lock</string>
     <string name="system_lock_only_body">The system lock is off, so unlocking Tumbler takes you straight to your home screen.</string>
+
+    <!-- Brand -->
+    <string name="brand_name">tumbler</string>
+    <string name="brand_byline">by Coco Experiments</string>
+    <string name="brand_tagline">Simple, purposeful security.</string>
+    <string name="brand_footer">A Coco Experiments product \u00B7 cocoexperiments.com</string>
 </resources>

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,6 +29,7 @@ import com.cocoexperiments.tumbler.R
 import com.cocoexperiments.tumbler.domain.PinPolicy
 import com.cocoexperiments.tumbler.ui.components.NumberPad
 import com.cocoexperiments.tumbler.ui.components.PinDots
+import com.cocoexperiments.tumbler.ui.components.Wordmark
 import com.cocoexperiments.tumbler.util.Haptics
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -124,10 +127,13 @@ fun PinSetupScreen(
         modifier = modifier
             .fillMaxSize()
             .systemBarsPadding()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        Wordmark(horizontalAlignment = Alignment.CenterHorizontally)
+        Spacer(Modifier.height(24.dp))
         Text(stringResource(title), style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
         Spacer(Modifier.height(8.dp))
         Text(

@@ -1,6 +1,14 @@
 # Tumbler
 
-Compose + Material 3 (dark) PIN lock screen with a shuffling 3x3 "digit group" keypad.
+**tumbler** - a Coco Experiments product (https://cocoexperiments.com). Simple, purposeful security.
+
+Compose + Material 3 (dark) PIN lock screen with a shuffling 3x3 "digit group" keypad. The board shuffles when the lock opens and after a wrong tap, and stays fixed while you enter correct digits.
+
+## Brand
+All brand colours live in `ui/theme/Brand.kt` (plus the launcher icon in `res/drawable/ic_launcher_*.xml` and `res/values/colors.xml`). Replace them with official Coco Experiments values when available.
+
+## One lock instead of two
+Android does not let apps replace or disable the system lock. To unlock only once, set the system screen lock to None or Swipe (the Home screen of the app links to the setting). Trade-off: without a system lock, the Home button can still leave Tumbler.
 
 ## Build
 Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotlin 2.0.21.

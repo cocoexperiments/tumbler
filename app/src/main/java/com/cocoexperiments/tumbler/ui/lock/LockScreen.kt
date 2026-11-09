@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.cocoexperiments.tumbler.R
 import com.cocoexperiments.tumbler.ui.components.KeypadGrid
 import com.cocoexperiments.tumbler.ui.components.PinDots
+import com.cocoexperiments.tumbler.ui.components.Wordmark
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -103,7 +104,12 @@ fun LockScreen(
             onGroupTapped = onGroupTapped,
             modifier = Modifier.graphicsLayer { translationX = shake.value * density },
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(20.dp))
+        Wordmark(
+            modifier = Modifier.graphicsLayer { alpha = 0.7f },
+            horizontalAlignment = Alignment.CenterHorizontally,
+        )
+        Spacer(Modifier.height(12.dp))
     }
 }
 

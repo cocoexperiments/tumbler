@@ -1,7 +1,9 @@
 package com.cocoexperiments.tumbler
 
 import android.Manifest
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -25,6 +27,7 @@ import com.cocoexperiments.tumbler.service.LockLauncher
 import com.cocoexperiments.tumbler.ui.main.HomeScreen
 import com.cocoexperiments.tumbler.ui.main.MainViewModel
 import com.cocoexperiments.tumbler.ui.main.PinSetupScreen
+import com.cocoexperiments.tumbler.ui.theme.Brand
 import com.cocoexperiments.tumbler.ui.theme.TumblerTheme
 import com.cocoexperiments.tumbler.util.AppPermissions
 
@@ -79,6 +82,7 @@ class MainActivity : ComponentActivity() {
                             onPreview = { LockLauncher.showNow(context) },
                             onChangePin = { changingPin = true },
                             onOpenSecuritySettings = { startActivity(AppPermissions.securitySettingsIntent()) },
+                            onOpenWebsite = { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Brand.COMPANY_URL))) },
                         )
                     }
                 }
