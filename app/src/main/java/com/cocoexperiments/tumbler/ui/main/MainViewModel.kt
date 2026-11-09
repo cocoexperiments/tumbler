@@ -16,6 +16,7 @@ data class MainUiState(
     val overlayGranted: Boolean = false,
     val notificationsGranted: Boolean = false,
     val fullScreenGranted: Boolean = false,
+    val systemLockSecure: Boolean = false,
 ) {
     val allPermissionsGranted: Boolean get() = overlayGranted && notificationsGranted && fullScreenGranted
 }
@@ -40,6 +41,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 overlayGranted = AppPermissions.canDrawOverlays(context),
                 notificationsGranted = AppPermissions.hasNotifications(context),
                 fullScreenGranted = AppPermissions.canUseFullScreenIntent(context),
+                systemLockSecure = AppPermissions.isSystemLockSecure(context),
             )
         }
     }

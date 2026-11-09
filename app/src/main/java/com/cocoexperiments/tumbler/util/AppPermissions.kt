@@ -1,6 +1,7 @@
 package com.cocoexperiments.tumbler.util
 
 import android.Manifest
+import android.app.KeyguardManager
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -24,6 +25,12 @@ object AppPermissions {
     fun canUseFullScreenIntent(context: Context): Boolean =
         Build.VERSION.SDK_INT < 34 ||
             context.getSystemService(NotificationManager::class.java).canUseFullScreenIntent()
+
+    /** True when the phone has its own PIN/pattern/password/biometric lock, i.e. the user must unlock twice. */
+    fun isSystemLockSecure(context: Context): Boolean =
+        context.getSystemService(KeyguardManager::class.java).isDeviceSecure
+
+    fun securitySettingsIntent(): Intent = Intent(Settings.ACTION_SECURITY_SETTINGS)
 
     fun overlaySettingsIntent(context: Context): Intent =
         Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))

@@ -38,6 +38,7 @@ fun HomeScreen(
     onRequestFullScreen: () -> Unit,
     onPreview: () -> Unit,
     onChangePin: () -> Unit,
+    onOpenSecuritySettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -84,6 +85,8 @@ fun HomeScreen(
                 )
             }
         }
+
+        SystemLockCard(secure = state.systemLockSecure, onOpenSettings = onOpenSecuritySettings)
 
         Text(
             stringResource(R.string.home_permissions),
@@ -149,6 +152,36 @@ private fun PermissionRow(title: Int, description: Int, granted: Boolean, onGran
                 )
             } else {
                 FilledTonalButton(onClick = onGrant) { Text(stringResource(R.string.grant)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SystemLockCard(secure: Boolean, onOpenSettings: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = if (secure) colors.surfaceContainerHigh else colors.primaryContainer.copy(alpha = 0.5f),
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                stringResource(if (secure) R.string.system_lock_title else R.string.system_lock_only_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                stringResource(if (secure) R.string.system_lock_body else R.string.system_lock_only_body),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+            )
+            if (secure) {
+                Spacer(Modifier.height(8.dp))
+                FilledTonalButton(onClick = onOpenSettings) { Text(stringResource(R.string.system_lock_action)) }
             }
         }
     }

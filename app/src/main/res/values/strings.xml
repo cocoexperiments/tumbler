@@ -44,4 +44,11 @@
     <string name="home_preview">Preview lock screen</string>
     <string name="home_change_pin">Change PIN</string>
     <string name="home_note">Android does not let apps replace the system lock screen. Tumbler appears on top of it as an extra PIN layer, so keep your device\'s own screen lock enabled for full protection.</string>
+
+    <!-- System lock overlap -->
+    <string name="system_lock_title">Two locks are active</string>
+    <string name="system_lock_body">Your phone\'s own screen lock is still on, so you unlock twice. To make Tumbler your only lock, set the system lock to None or Swipe in Settings.\n\nTrade-off: without a system lock, the Home button can still leave Tumbler, and the phone\'s data is not tied to a lock credential.</string>
+    <string name="system_lock_action">Open security settings</string>
+    <string name="system_lock_only_title">Tumbler is your only lock</string>
+    <string name="system_lock_only_body">The system lock is off, so unlocking Tumbler takes you straight to your home screen.</string>
 </resources>

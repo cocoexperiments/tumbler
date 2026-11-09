@@ -78,6 +78,7 @@ class MainActivity : ComponentActivity() {
                             onRequestFullScreen = { startActivity(AppPermissions.fullScreenIntentSettingsIntent(context)) },
                             onPreview = { LockLauncher.showNow(context) },
                             onChangePin = { changingPin = true },
+                            onOpenSecuritySettings = { startActivity(AppPermissions.securitySettingsIntent()) },
                         )
                     }
                 }
