@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Dynamic Lock</string>
+
+    <!-- Notifications -->
+    <string name="channel_service_name">Lock service</string>
+    <string name="channel_launch_name">Lock screen</string>
+    <string name="notif_service_title">Lock screen is active</string>
+    <string name="notif_service_text">Your screen is protected by your PIN.</string>
+    <string name="notif_launch_title">Unlock</string>
+    <string name="notif_launch_text">Enter your PIN to continue.</string>
+
+    <!-- PIN setup -->
+    <string name="setup_title_verify">Enter current PIN</string>
+    <string name="setup_title_new">Create your PIN</string>
+    <string name="setup_title_confirm">Confirm your PIN</string>
+    <string name="setup_subtitle_verify">Confirm it\'s you before changing the PIN</string>
+    <string name="setup_subtitle_new">Choose a 4-digit master PIN</string>
+    <string name="setup_subtitle_confirm">Enter the same PIN once more</string>
+    <string name="setup_error_wrong">Incorrect PIN</string>
+    <string name="setup_error_mismatch">PINs didn\'t match. Try again.</string>
+    <string name="cancel">Cancel</string>
+    <string name="backspace">Delete</string>
+
+    <!-- Lock screen -->
+    <string name="lock_prompt">Tap the button that contains the next digit of your PIN</string>
+    <string name="lock_step">Digit %1$d of %2$d</string>
+    <string name="lock_lockout">Too many wrong attempts. Try again in %1$d s</string>
+
+    <!-- Home -->
+    <string name="home_status_active">Lock screen is on</string>
+    <string name="home_status_off">Lock screen is off</string>
+    <string name="home_status_setup">Grant the permissions below to turn it on</string>
+    <string name="home_enable">Enable lock screen</string>
+    <string name="home_permissions">Permissions</string>
+    <string name="perm_overlay_title">Display over other apps</string>
+    <string name="perm_overlay_desc">Lets the lock screen appear when the screen turns off.</string>
+    <string name="perm_notifications_title">Notifications</string>
+    <string name="perm_notifications_desc">Required for the background service and the unlock alert.</string>
+    <string name="perm_fullscreen_title">Full-screen alerts</string>
+    <string name="perm_fullscreen_desc">Lets the lock screen open over the system lock screen.</string>
+    <string name="grant">Grant</string>
+    <string name="granted">Granted</string>
+    <string name="home_preview">Preview lock screen</string>
+    <string name="home_change_pin">Change PIN</string>
+    <string name="home_note">Android does not let apps replace the system lock screen. Dynamic Lock appears on top of it as an extra PIN layer, so keep your device\'s own screen lock enabled for full protection.</string>
+</resources>
