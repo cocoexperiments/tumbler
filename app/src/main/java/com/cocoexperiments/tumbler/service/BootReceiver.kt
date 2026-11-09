@@ -11,7 +11,10 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED && intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
         val repository = PinRepository.get(context)
         if (!repository.hasPin() || !repository.lockEnabled) return
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) LockState.arm(context)
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            repository.pinRequired = true // first unlock after a reboot is PIN only
+            LockState.arm(context)
+        }
         LockScreenService.start(context)
     }
 }

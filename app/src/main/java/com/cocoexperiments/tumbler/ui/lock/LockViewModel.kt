@@ -9,6 +9,7 @@ import com.cocoexperiments.tumbler.domain.KeypadGroup
 import com.cocoexperiments.tumbler.domain.PinPolicy
 import com.cocoexperiments.tumbler.domain.PinSession
 import com.cocoexperiments.tumbler.domain.TapResult
+import com.cocoexperiments.tumbler.domain.UnlockPolicy
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -28,6 +29,8 @@ data class LockUiState(
     /** Increments on every wrong tap; drives the shake animation. */
     val errorCount: Int = 0,
     val lockoutSeconds: Int = 0,
+    /** Show the "Use fingerprint" button (set by the activity, which knows the sensor state). */
+    val fingerprintAvailable: Boolean = false,
 )
 
 sealed interface LockEvent {
@@ -56,6 +59,10 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
         newAttempt()
     }
 
+    fun setFingerprintAvailable(available: Boolean) {
+        _state.update { it.copy(fingerprintAvailable = available) }
+    }
+
     /** Starts a fresh attempt: step 0 and a freshly shuffled board. The board is also reshuffled after a wrong tap, but not after correct digits. */
     fun newAttempt() {
         val pin = repository.readPin()
@@ -68,6 +75,17 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
         errorJob?.cancel()
         _state.update { it.copy(groups = generator.generate(), step = 0, isError = false) }
         startLockoutCountdown()
+    }
+
+    /** Whether the fingerprint may be offered right now; [sensorReady] comes from the platform. */
+    fun fingerprintAllowed(sensorReady: Boolean): Boolean =
+        UnlockPolicy.fingerprintAllowed(repository.fingerprintEnabled, repository.pinRequired, sensorReady)
+
+    /** The system verified an enrolled fingerprint. Re-checks the policy so a stale prompt cannot unlock. */
+    fun onFingerprintSucceeded(sensorReady: Boolean) {
+        if (!fingerprintAllowed(sensorReady)) return
+        repository.clearFailures()
+        _events.trySend(LockEvent.Unlocked)
     }
 
     fun onGroupTapped(index: Int) {
@@ -83,6 +101,7 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
 
             TapResult.Completed -> {
                 repository.clearFailures()
+                repository.pinRequired = false
                 _state.update { it.copy(step = it.pinLength) }
                 _events.trySend(LockEvent.Unlocked)
             }

@@ -19,17 +19,18 @@ Keep this file current. When architecture, build, release or conventions change,
 
 ## Architecture
 
-- `domain/`: pure Kotlin, no Android imports, unit tested. `KeypadGenerator` builds the board (every digit appears at least twice, three distinct digits per button). `PinSession` is the step-counter state machine; `LockoutPolicy` handles escalating lockout (free for 4 wrong taps, then 30s doubling up to 15 min).
+- `domain/`: pure Kotlin, no Android imports, unit tested. `KeypadGenerator` builds the board (every digit appears at least twice, three distinct digits per button). `PinSession` is the step-counter state machine; `LockoutPolicy` handles escalating lockout (free for 4 wrong taps, then 30s doubling up to 15 min). `UnlockPolicy` decides when the fingerprint is offered.
 - `data/PinRepository`: PIN and the persisted `lockArmed` flag.
 - `service/`: `LockScreenService` (foreground service listening for SCREEN_OFF/ON), `LockLauncher`, `BootReceiver` (boot and package replaced), `LockGuardService` (optional accessibility service that re-shows the lock when Home, Recents or another app comes forward), `LockState` (process-wide state).
-- `LockScreenActivity`: shown over the keyguard, excluded from Recents, own task (`taskAffinity=""`, `singleTask`). `MainActivity` is setup and home.
+- `LockScreenActivity` (also hosts the fingerprint prompt): shown over the keyguard, excluded from Recents, own task (`taskAffinity=""`, `singleTask`). `MainActivity` is setup and home.
 - `ui/`: Compose. `lock/`, `main/`, `components/`, `theme/` (brand colours live in `theme/Brand.kt`).
 
 ## Product rules (do not break these)
 
-- Tumbler is the only unlock the user sees and must not be bypassable via Recents or swipe-away. `LockState.armed` is set on screen-off and boot and cleared only by a correct PIN. Never clear it elsewhere.
+- Tumbler is the only unlock the user sees and must not be bypassable via Recents or swipe-away. `LockState.armed` is set on screen-off and boot and cleared only by a correct PIN or, when the user enabled it, a successful system fingerprint prompt (`LockViewModel`). Never clear it elsewhere.
 - Do not use `noHistory` (destroys the lock on screen-off), `ACTION_CLOSE_SYSTEM_DIALOGS` (blocked since Android 12) or Lock Task mode (needs Device Owner). See README for why.
 - The accessibility service must only watch window changes, never read screen content. Keep its config minimal.
+- Fingerprint is an opt-in alternative, never a replacement: the PIN keypad is always usable. It uses `androidx.biometric` `BiometricPrompt` with `BIOMETRIC_STRONG` and no device-credential fallback (so no system PIN prompt). `LockScreenActivity` is a `FragmentActivity` for this reason. `PinRepository.pinRequired` is set on boot and cleared only by a correct PIN; while set, the fingerprint is not offered. `UnlockPolicy` holds the decision.
 - Keep `domain/` free of Android dependencies so it stays unit testable.
 - Manifest: `LockScreenActivity`, services and `allowBackup=false` are deliberate. Only `MainActivity` and `BootReceiver` are exported.
 

@@ -53,6 +53,20 @@ class PinRepository private constructor(private val appContext: Context) {
             prefs.edit().putBoolean(KEY_ARMED, value).apply()
         }
 
+    /** The user opted in to unlocking with a fingerprint as an alternative to the PIN. */
+    var fingerprintEnabled: Boolean
+        get() = prefs.getBoolean(KEY_FINGERPRINT, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_FINGERPRINT, value).commit()
+        }
+
+    /** Set on boot: the PIN must be entered once before the fingerprint works again. Cleared only by a correct PIN. */
+    var pinRequired: Boolean
+        get() = prefs.getBoolean(KEY_PIN_REQUIRED, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_PIN_REQUIRED, value).commit()
+        }
+
     /** Registers a wrong tap and starts a lockout when the policy demands one. */
     fun recordFailure() {
         val failures = prefs.getInt(KEY_FAILURES, 0) + 1
@@ -106,6 +120,8 @@ class PinRepository private constructor(private val appContext: Context) {
         private const val KEY_PIN = "master_pin"
         private const val KEY_ENABLED = "lock_enabled"
         private const val KEY_ARMED = "lock_armed"
+        private const val KEY_FINGERPRINT = "fingerprint_enabled"
+        private const val KEY_PIN_REQUIRED = "pin_required"
         private const val KEY_FAILURES = "failed_attempts"
         private const val KEY_LOCKOUT_UNTIL = "lockout_until"
 

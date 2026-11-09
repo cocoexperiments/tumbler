@@ -30,6 +30,7 @@ import com.cocoexperiments.tumbler.ui.main.PinSetupScreen
 import com.cocoexperiments.tumbler.ui.theme.Brand
 import com.cocoexperiments.tumbler.ui.theme.TumblerTheme
 import com.cocoexperiments.tumbler.util.AppPermissions
+import com.cocoexperiments.tumbler.util.Biometrics
 
 class MainActivity : ComponentActivity() {
 
@@ -81,6 +82,8 @@ class MainActivity : ComponentActivity() {
                             onRequestFullScreen = { startActivity(AppPermissions.fullScreenIntentSettingsIntent(context)) },
                             onPreview = { LockLauncher.showNow(context) },
                             onChangePin = { changingPin = true },
+                            onToggleFingerprint = viewModel::setFingerprintEnabled,
+                            onEnrollFingerprint = { startActivity(Biometrics.enrollIntent()) },
                             onOpenSecuritySettings = { startActivity(AppPermissions.securitySettingsIntent()) },
                             onEnableGuard = { startActivity(AppPermissions.accessibilitySettingsIntent()) },
                             onOpenWebsite = { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Brand.COMPANY_URL))) },

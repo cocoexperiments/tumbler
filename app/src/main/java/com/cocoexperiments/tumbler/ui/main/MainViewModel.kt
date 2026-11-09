@@ -6,6 +6,7 @@ import com.cocoexperiments.tumbler.data.PinRepository
 import com.cocoexperiments.tumbler.service.LockScreenService
 import com.cocoexperiments.tumbler.service.LockState
 import com.cocoexperiments.tumbler.util.AppPermissions
+import com.cocoexperiments.tumbler.util.Biometrics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +20,9 @@ data class MainUiState(
     val fullScreenGranted: Boolean = false,
     val systemLockSecure: Boolean = false,
     val guardEnabled: Boolean = false,
+    val fingerprintEnabled: Boolean = false,
+    val fingerprintHardware: Boolean = false,
+    val fingerprintReady: Boolean = false,
 ) {
     val allPermissionsGranted: Boolean get() = overlayGranted && notificationsGranted && fullScreenGranted
 }
@@ -45,6 +49,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 fullScreenGranted = AppPermissions.canUseFullScreenIntent(context),
                 systemLockSecure = AppPermissions.isSystemLockSecure(context),
                 guardEnabled = AppPermissions.isGuardEnabled(context),
+                fingerprintEnabled = repository.fingerprintEnabled,
+                fingerprintHardware = Biometrics.hasHardware(context),
+                fingerprintReady = Biometrics.isReady(context),
             )
         }
     }
@@ -53,6 +60,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun savePin(pin: String) {
         repository.savePin(pin)
+        refresh()
+    }
+
+    fun setFingerprintEnabled(enabled: Boolean) {
+        if (enabled && !Biometrics.isReady(getApplication())) return
+        repository.fingerprintEnabled = enabled
         refresh()
     }
 

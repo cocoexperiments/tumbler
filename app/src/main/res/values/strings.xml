@@ -27,6 +27,11 @@
     <string name="lock_step">Digit %1$d of %2$d</string>
     <string name="lock_lockout">Too many wrong attempts. Try again in %1$d s</string>
 
+    <string name="fingerprint_button">Use fingerprint</string>
+    <string name="fingerprint_title">Unlock Tumbler</string>
+    <string name="fingerprint_subtitle">Touch the fingerprint sensor, or use your PIN</string>
+    <string name="fingerprint_use_pin">Use PIN</string>
+
     <!-- Home -->
     <string name="home_status_active">Lock screen is on</string>
     <string name="home_status_off">Lock screen is off</string>
@@ -44,6 +49,13 @@
     <string name="home_preview">Preview lock screen</string>
     <string name="home_change_pin">Change PIN</string>
     <string name="home_note">Android does not let apps replace the system lock screen. Tumbler appears on top of it as an extra PIN layer, so keep your device\'s own screen lock enabled for full protection.</string>
+
+    <string name="fingerprint_card_title">Unlock with fingerprint</string>
+    <string name="fingerprint_card_on">Use a fingerprint or your PIN. After a restart, the PIN is needed first.</string>
+    <string name="fingerprint_card_off">Off. You will always use your PIN.</string>
+    <string name="fingerprint_card_no_hardware">This device has no fingerprint sensor.</string>
+    <string name="fingerprint_card_not_enrolled">Add a fingerprint in Android settings first. Android only allows this when the phone has its own screen lock (PIN, pattern or password).</string>
+    <string name="fingerprint_card_enroll">Add fingerprint</string>
 
     <!-- System lock overlap -->
     <string name="system_lock_title">Two locks are active</string>

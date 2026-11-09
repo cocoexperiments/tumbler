@@ -6,17 +6,19 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.biometric.BiometricPrompt
 import androidx.compose.runtime.getValue
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -27,13 +29,21 @@ import com.cocoexperiments.tumbler.ui.lock.LockEvent
 import com.cocoexperiments.tumbler.ui.lock.LockScreen
 import com.cocoexperiments.tumbler.ui.lock.LockViewModel
 import com.cocoexperiments.tumbler.ui.theme.TumblerTheme
+import com.cocoexperiments.tumbler.util.Biometrics
 import com.cocoexperiments.tumbler.util.Haptics
 import kotlinx.coroutines.launch
 
-/** Renders above the system keyguard (showWhenLocked) and hosts the dynamic keypad. */
-class LockScreenActivity : ComponentActivity() {
+/**
+ * Renders above the system keyguard (showWhenLocked) and hosts the dynamic keypad, plus the optional
+ * fingerprint prompt. (FragmentActivity because BiometricPrompt requires it.)
+ */
+class LockScreenActivity : FragmentActivity() {
 
     private val viewModel: LockViewModel by viewModels()
+    private var fingerprintShowing = false
+
+    /** The user dismissed the prompt ("Use PIN") during this attempt; do not pop it up again until the next one. */
+    private var fingerprintDeclined = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +75,11 @@ class LockScreenActivity : ComponentActivity() {
         setContent {
             TumblerTheme {
                 val state by viewModel.state.collectAsStateWithLifecycle()
-                LockScreen(state = state, onGroupTapped = viewModel::onGroupTapped)
+                LockScreen(
+                    state = state,
+                    onGroupTapped = viewModel::onGroupTapped,
+                    onUseFingerprint = { showFingerprint(force = true) },
+                )
             }
         }
     }
@@ -77,12 +91,17 @@ class LockScreenActivity : ComponentActivity() {
         if (intent.getBooleanExtra(LockLauncher.EXTRA_REASSERT, false)) return
         setIntent(intent)
         applyWake(intent)
-        viewModel.newAttempt()
+        newAttempt()
     }
 
     /** Coming back from a stopped state (screen was off): reshuffle and reset the sequence. */
     override fun onRestart() {
         super.onRestart()
+        newAttempt()
+    }
+
+    private fun newAttempt() {
+        fingerprintDeclined = false
         viewModel.newAttempt()
     }
 
@@ -103,6 +122,7 @@ class LockScreenActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         LockState.isForeground = true
+        showFingerprint(force = false)
     }
 
     override fun onPause() {
@@ -113,6 +133,7 @@ class LockScreenActivity : ComponentActivity() {
     /** Left via Home, Recents or another app while still locked: come straight back. */
     override fun onStop() {
         super.onStop()
+        if (fingerprintShowing) biometricPrompt.cancelAuthentication() // no prompt over a stopped lock screen
         if (!isFinishing) LockLauncher.reassert(this)
     }
 
@@ -120,6 +141,47 @@ class LockScreenActivity : ComponentActivity() {
         LockState.isForeground = false
         LockState.isActive = false
         super.onDestroy()
+    }
+
+    private val biometricPrompt: BiometricPrompt by lazy {
+        BiometricPrompt(
+            this,
+            ContextCompat.getMainExecutor(this),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    fingerprintShowing = false
+                    viewModel.onFingerprintSucceeded(Biometrics.isReady(this@LockScreenActivity))
+                }
+
+                // Cancelled, "Use PIN", too many tries or sensor lockout: fall back to the PIN keypad.
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    fingerprintShowing = false
+                    fingerprintDeclined = true
+                }
+            },
+        )
+    }
+
+    /**
+     * Offers the fingerprint when it is enabled, enrolled and the PIN has not been forced (reboot).
+     * Without [force] it appears once per attempt; the "Use fingerprint" button passes force = true.
+     * The PIN keypad is always there underneath, so the fingerprint can never lock the user out.
+     */
+    private fun showFingerprint(force: Boolean) {
+        val allowed = viewModel.fingerprintAllowed(Biometrics.isReady(this))
+        viewModel.setFingerprintAvailable(allowed)
+        if (!allowed || fingerprintShowing || (!force && fingerprintDeclined)) return
+        fingerprintShowing = true
+        fingerprintDeclined = false
+        biometricPrompt.authenticate(
+            BiometricPrompt.PromptInfo.Builder()
+                .setTitle(getString(R.string.fingerprint_title))
+                .setSubtitle(getString(R.string.fingerprint_subtitle))
+                .setNegativeButtonText(getString(R.string.fingerprint_use_pin))
+                .setAllowedAuthenticators(Biometrics.AUTHENTICATORS)
+                .setConfirmationRequired(false)
+                .build(),
+        )
     }
 
     private fun configureWindow(intent: Intent) {

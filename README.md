@@ -13,6 +13,9 @@ All brand colours live in `ui/theme/Brand.kt` (plus the launcher icon in `res/dr
 ## One lock instead of two
 Android does not let apps replace or disable the system lock. To unlock only once, set the system screen lock to None or Swipe (the Home screen of the app links to the setting). Trade-off: without a system lock, the Home button can still leave Tumbler.
 
+## Fingerprint unlock
+Optional, off by default: turn on **Unlock with fingerprint** on the Home screen. The lock screen then offers the system fingerprint prompt (strong biometrics only) and the PIN keypad stays available underneath ("Use PIN" or the "Use fingerprint" button), so either one unlocks. The first unlock after a reboot always needs the PIN, like Android's own lock. Android only enrols fingerprints when the phone has its own screen lock, so this cannot be combined with the "One lock instead of two" setup (system lock None/Swipe).
+
 ## Build
 Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotlin 2.0.21.
 `gradle testDebugUnitTest assembleDebug` (or `gradle wrapper` once to generate `gradlew`). Every push to `main` is built, given the next version (1.0.1, 1.0.2, ...) and published as a GitHub Release with the APK attached; download it on your phone and install it. Pull requests only get a test and build check. To start a new minor or major line, push a tag by hand such as `v1.1.0`.
@@ -25,6 +28,7 @@ Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotl
 ## Layout
 - `domain/KeypadGenerator.kt` - board generator (every digit appears >= 2 times, 3 distinct digits per button)
 - `domain/PinSession.kt` - step counter state machine + lockout policy
+- `domain/UnlockPolicy.kt` - when the fingerprint may be offered
 - `data/PinRepository.kt` - EncryptedSharedPreferences storage
 - `service/` - foreground service (SCREEN_OFF/ON), launcher, boot receiver
 - `LockScreenActivity.kt` - shows over the keyguard; `ui/` - Compose screens and components

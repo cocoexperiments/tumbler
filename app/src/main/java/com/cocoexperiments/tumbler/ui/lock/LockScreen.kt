@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,6 +43,7 @@ import kotlinx.coroutines.delay
 fun LockScreen(
     state: LockUiState,
     onGroupTapped: (Int) -> Unit,
+    onUseFingerprint: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -104,7 +106,13 @@ fun LockScreen(
             onGroupTapped = onGroupTapped,
             modifier = Modifier.graphicsLayer { translationX = shake.value * density },
         )
-        Spacer(Modifier.height(20.dp))
+        // Fixed height so the keypad does not move when the button appears.
+        Box(Modifier.height(48.dp), contentAlignment = Alignment.Center) {
+            if (state.fingerprintAvailable) {
+                TextButton(onClick = onUseFingerprint) { Text(stringResource(R.string.fingerprint_button)) }
+            }
+        }
+        Spacer(Modifier.height(4.dp))
         Wordmark(
             modifier = Modifier.graphicsLayer { alpha = 0.7f },
             horizontalAlignment = Alignment.CenterHorizontally,

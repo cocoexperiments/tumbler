@@ -40,6 +40,8 @@ fun HomeScreen(
     onRequestFullScreen: () -> Unit,
     onPreview: () -> Unit,
     onChangePin: () -> Unit,
+    onToggleFingerprint: (Boolean) -> Unit,
+    onEnrollFingerprint: () -> Unit,
     onOpenSecuritySettings: () -> Unit,
     onOpenWebsite: () -> Unit,
     onEnableGuard: () -> Unit,
@@ -89,6 +91,8 @@ fun HomeScreen(
                 )
             }
         }
+
+        FingerprintCard(state = state, onToggle = onToggleFingerprint, onEnroll = onEnrollFingerprint)
 
         SystemLockCard(secure = state.systemLockSecure, onOpenSettings = onOpenSecuritySettings)
 
@@ -159,6 +163,40 @@ private fun PermissionRow(title: Int, description: Int, granted: Boolean, onGran
                 )
             } else {
                 FilledTonalButton(onClick = onGrant) { Text(stringResource(R.string.grant)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FingerprintCard(state: MainUiState, onToggle: (Boolean) -> Unit, onEnroll: () -> Unit) {
+    if (!state.fingerprintHardware) return // no sensor: nothing to offer
+    val colors = MaterialTheme.colorScheme
+    Surface(shape = RoundedCornerShape(24.dp), color = colors.surfaceContainerHigh) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.fingerprint_card_title), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(
+                        when {
+                            !state.fingerprintReady -> R.string.fingerprint_card_not_enrolled
+                            state.fingerprintEnabled -> R.string.fingerprint_card_on
+                            else -> R.string.fingerprint_card_off
+                        },
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
+                )
+            }
+            if (state.fingerprintReady) {
+                Switch(checked = state.fingerprintEnabled, onCheckedChange = onToggle)
+            } else {
+                FilledTonalButton(onClick = onEnroll) { Text(stringResource(R.string.fingerprint_card_enroll)) }
             }
         }
     }
