@@ -14,6 +14,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -40,6 +43,7 @@ class LockScreenActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
+        hideNavigationBar()
         NotificationManagerCompat.from(this).cancel(LockLauncher.NOTIFICATION_ID)
 
         // Back must not dismiss the lock screen.
@@ -80,6 +84,20 @@ class LockScreenActivity : ComponentActivity() {
     override fun onRestart() {
         super.onRestart()
         viewModel.newAttempt()
+    }
+
+    /** The system re-shows the bars after dialogs, keyguard prompts, etc.; hide them again. */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) hideNavigationBar()
+    }
+
+    /** Hides the back/home/recents buttons; a swipe from the edge only reveals them transiently. */
+    private fun hideNavigationBar() {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.navigationBars())
+        }
     }
 
     override fun onResume() {
