@@ -4,12 +4,15 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.cocoexperiments.tumbler.domain.AppLockPolicy
+import com.cocoexperiments.tumbler.domain.LockedApp
 import com.cocoexperiments.tumbler.domain.LockoutPolicy
 import com.cocoexperiments.tumbler.domain.PinPolicy
 import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.KeyStore
 import java.security.MessageDigest
+import java.time.LocalDate
 
 /**
  * Stores the master PIN and lock settings in [EncryptedSharedPreferences] (AES256-GCM values,
@@ -40,18 +43,33 @@ class PinRepository private constructor(private val appContext: Context) {
         return MessageDigest.isEqual(stored.toByteArray(), candidate.toByteArray())
     }
 
+    /** Master switch for app locking. */
     var lockEnabled: Boolean
         get() = prefs.getBoolean(KEY_ENABLED, false)
         set(value) {
             prefs.edit().putBoolean(KEY_ENABLED, value).commit()
         }
 
-    /** True from screen-off/boot until a correct PIN is entered. Persisted so a killed process cannot be used to skip the lock. */
-    var lockArmed: Boolean
-        get() = prefs.getBoolean(KEY_ARMED, false)
+    /** Apps behind Tumbler, with the mode chosen for each. */
+    var lockedApps: List<LockedApp>
+        get() = (prefs.getStringSet(KEY_LOCKED_APPS, emptySet()) ?: emptySet())
+            .mapNotNull(AppLockPolicy::decode)
+            .sortedBy { it.packageName }
         set(value) {
-            prefs.edit().putBoolean(KEY_ARMED, value).apply()
+            prefs.edit().putStringSet(KEY_LOCKED_APPS, value.map(AppLockPolicy::encode).toSet()).commit()
         }
+
+    /** Successful opens of [packageName] today (Wellbeing mode shows this on the pause screen). */
+    fun opensToday(packageName: String, today: String = LocalDate.now().toString()): Int {
+        val raw = prefs.getString(KEY_OPENS + packageName, null) ?: return 0
+        val (day, count) = raw.split(':').takeIf { it.size == 2 } ?: return 0
+        return if (day == today) count.toIntOrNull() ?: 0 else 0
+    }
+
+    fun recordOpen(packageName: String, today: String = LocalDate.now().toString()) {
+        val count = opensToday(packageName, today) + 1
+        prefs.edit().putString(KEY_OPENS + packageName, "$today:$count").apply()
+    }
 
     /** The user opted in to unlocking with a fingerprint as an alternative to the PIN. */
     var fingerprintEnabled: Boolean
@@ -119,7 +137,8 @@ class PinRepository private constructor(private val appContext: Context) {
         private const val FILE_NAME = "tumbler_secure_prefs"
         private const val KEY_PIN = "master_pin"
         private const val KEY_ENABLED = "lock_enabled"
-        private const val KEY_ARMED = "lock_armed"
+        private const val KEY_LOCKED_APPS = "locked_apps"
+        private const val KEY_OPENS = "opens_"
         private const val KEY_FINGERPRINT = "fingerprint_enabled"
         private const val KEY_PIN_REQUIRED = "pin_required"
         private const val KEY_FAILURES = "failed_attempts"

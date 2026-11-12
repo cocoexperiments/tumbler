@@ -1,6 +1,5 @@
 package com.cocoexperiments.tumbler.ui.main
 
-import android.os.Build
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,13 +35,11 @@ fun HomeScreen(
     state: MainUiState,
     onToggleLock: (Boolean) -> Unit,
     onRequestOverlay: () -> Unit,
-    onRequestNotifications: () -> Unit,
-    onRequestFullScreen: () -> Unit,
+    onOpenApps: () -> Unit,
     onPreview: () -> Unit,
     onChangePin: () -> Unit,
     onToggleFingerprint: (Boolean) -> Unit,
     onEnrollFingerprint: () -> Unit,
-    onOpenSecuritySettings: () -> Unit,
     onOpenWebsite: () -> Unit,
     onEnableGuard: () -> Unit,
     modifier: Modifier = Modifier,
@@ -92,9 +89,9 @@ fun HomeScreen(
             }
         }
 
-        FingerprintCard(state = state, onToggle = onToggleFingerprint, onEnroll = onEnrollFingerprint)
+        LockedAppsCard(count = state.lockedApps.size, onClick = onOpenApps)
 
-        SystemLockCard(secure = state.systemLockSecure, onOpenSettings = onOpenSecuritySettings)
+        FingerprintCard(state = state, onToggle = onToggleFingerprint, onEnroll = onEnrollFingerprint)
 
         Text(
             stringResource(R.string.home_permissions),
@@ -102,23 +99,6 @@ fun HomeScreen(
             color = colors.primary,
         )
         PermissionRow(R.string.perm_overlay_title, R.string.perm_overlay_desc, state.overlayGranted, onRequestOverlay)
-        if (Build.VERSION.SDK_INT >= 33) {
-            PermissionRow(
-                R.string.perm_notifications_title,
-                R.string.perm_notifications_desc,
-                state.notificationsGranted,
-                onRequestNotifications,
-            )
-        }
-        if (Build.VERSION.SDK_INT >= 34) {
-            PermissionRow(
-                R.string.perm_fullscreen_title,
-                R.string.perm_fullscreen_desc,
-                state.fullScreenGranted,
-                onRequestFullScreen,
-            )
-        }
-
         PermissionRow(R.string.perm_guard_title, R.string.perm_guard_desc, state.guardEnabled, onEnableGuard)
 
         Spacer(Modifier.height(4.dp))
@@ -203,31 +183,24 @@ private fun FingerprintCard(state: MainUiState, onToggle: (Boolean) -> Unit, onE
 }
 
 @Composable
-private fun SystemLockCard(secure: Boolean, onOpenSettings: () -> Unit) {
+private fun LockedAppsCard(count: Int, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = if (secure) colors.surfaceContainerHigh else colors.primaryContainer.copy(alpha = 0.5f),
-    ) {
-        Column(
+    Surface(shape = RoundedCornerShape(24.dp), color = colors.surfaceContainerHigh) {
+        Row(
             Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                stringResource(if (secure) R.string.system_lock_title else R.string.system_lock_only_title),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                stringResource(if (secure) R.string.system_lock_body else R.string.system_lock_only_body),
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.onSurfaceVariant,
-            )
-            if (secure) {
-                Spacer(Modifier.height(8.dp))
-                FilledTonalButton(onClick = onOpenSettings) { Text(stringResource(R.string.system_lock_action)) }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.apps_title), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(if (count == 0) R.string.apps_card_empty else R.string.apps_count, count),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
+                )
             }
+            FilledTonalButton(onClick = onClick) { Text(stringResource(if (count == 0) R.string.apps_choose else R.string.apps_edit)) }
         }
     }
 }

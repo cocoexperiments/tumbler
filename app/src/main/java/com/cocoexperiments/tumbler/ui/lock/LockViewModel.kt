@@ -2,14 +2,21 @@ package com.cocoexperiments.tumbler.ui.lock
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewModelScope
 import com.cocoexperiments.tumbler.data.PinRepository
+import com.cocoexperiments.tumbler.domain.AppLockPolicy
 import com.cocoexperiments.tumbler.domain.KeypadGenerator
 import com.cocoexperiments.tumbler.domain.KeypadGroup
+import com.cocoexperiments.tumbler.domain.LockMode
+import com.cocoexperiments.tumbler.domain.LockedApp
 import com.cocoexperiments.tumbler.domain.PinPolicy
 import com.cocoexperiments.tumbler.domain.PinSession
 import com.cocoexperiments.tumbler.domain.TapResult
 import com.cocoexperiments.tumbler.domain.UnlockPolicy
+import com.cocoexperiments.tumbler.service.LockState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -31,7 +38,19 @@ data class LockUiState(
     val lockoutSeconds: Int = 0,
     /** Show the "Use fingerprint" button (set by the activity, which knows the sensor state). */
     val fingerprintAvailable: Boolean = false,
-)
+    /** The app being guarded; null for the in-app preview. */
+    val appLabel: String? = null,
+    val appIcon: ImageBitmap? = null,
+    val mode: LockMode = LockMode.PRIVACY,
+    /** Wellbeing: seconds left before the keypad works. */
+    val pauseSecondsLeft: Int = 0,
+    /** Wellbeing: how long the app stays open after unlocking, chosen from [grantOptions]. */
+    val grantMinutes: Int = 0,
+    val grantOptions: List<Int> = emptyList(),
+    val opensToday: Int = 0,
+) {
+    val keypadEnabled: Boolean get() = lockoutSeconds == 0 && pauseSecondsLeft == 0
+}
 
 sealed interface LockEvent {
     /** Wrong group tapped: vibrate. */
@@ -48,6 +67,8 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
     private var session: PinSession? = null
     private var errorJob: Job? = null
     private var lockoutJob: Job? = null
+    private var pauseJob: Job? = null
+    private var app: LockedApp? = null
 
     private val _state = MutableStateFlow(LockUiState(groups = generator.generate()))
     val state: StateFlow<LockUiState> = _state.asStateFlow()
@@ -55,8 +76,31 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
     private val _events = Channel<LockEvent>(Channel.BUFFERED)
     val events = _events.receiveAsFlow()
 
-    init {
+    /** Chooses which app this lock guards (null = preview) and starts a fresh attempt for it. */
+    fun setTarget(packageName: String?) {
+        app = packageName?.let { pkg ->
+            LockState.appFor(pkg) ?: repository.lockedApps.firstOrNull { it.packageName == pkg }
+        }
+        val current = app
+        val pm = getApplication<Application>().packageManager
+        val label = current?.let { runCatching { pm.getApplicationLabel(pm.getApplicationInfo(it.packageName, 0)).toString() }.getOrNull() }
+        val icon = current?.let { runCatching { pm.getApplicationIcon(it.packageName).toBitmap(160, 160).asImageBitmap() }.getOrNull() }
+        val mode = current?.mode ?: LockMode.PRIVACY
+        _state.update {
+            it.copy(
+                appLabel = label,
+                appIcon = icon,
+                mode = mode,
+                grantMinutes = if (mode == LockMode.WELLBEING) current?.minutes ?: 0 else 0,
+                grantOptions = if (mode == LockMode.WELLBEING) AppLockPolicy.WELLBEING_OPTIONS else emptyList(),
+                opensToday = current?.let { a -> repository.opensToday(a.packageName) } ?: 0,
+            )
+        }
         newAttempt()
+    }
+
+    fun selectGrantMinutes(minutes: Int) {
+        _state.update { it.copy(grantMinutes = minutes) }
     }
 
     fun setFingerprintAvailable(available: Boolean) {
@@ -75,23 +119,51 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
         errorJob?.cancel()
         _state.update { it.copy(groups = generator.generate(), step = 0, isError = false) }
         startLockoutCountdown()
+        startPause()
+    }
+
+    /** Wellbeing friction: the keypad stays disabled for a few seconds every time the lock appears. */
+    private fun startPause() {
+        pauseJob?.cancel()
+        val seconds = AppLockPolicy.pauseSeconds(_state.value.mode)
+        _state.update { it.copy(pauseSecondsLeft = seconds) }
+        if (seconds == 0) return
+        pauseJob = viewModelScope.launch {
+            var left = seconds
+            while (left > 0) {
+                delay(1000)
+                left--
+                _state.update { it.copy(pauseSecondsLeft = left) }
+            }
+        }
+    }
+
+    /** Records the grant that lets the guarded app stay open, then tells the activity to finish. */
+    private fun unlock() {
+        app?.let { locked ->
+            val minutes = if (locked.mode == LockMode.WELLBEING) _state.value.grantMinutes.takeIf { it > 0 } ?: locked.minutes else locked.minutes
+            LockState.grant(locked.packageName, minutes)
+            if (locked.mode == LockMode.WELLBEING) repository.recordOpen(locked.packageName)
+        }
+        _events.trySend(LockEvent.Unlocked)
     }
 
     /** Whether the fingerprint may be offered right now; [sensorReady] comes from the platform. */
     fun fingerprintAllowed(sensorReady: Boolean): Boolean =
-        UnlockPolicy.fingerprintAllowed(repository.fingerprintEnabled, repository.pinRequired, sensorReady)
+        AppLockPolicy.fingerprintAllowedFor(_state.value.mode) &&
+            UnlockPolicy.fingerprintAllowed(repository.fingerprintEnabled, repository.pinRequired, sensorReady)
 
     /** The system verified an enrolled fingerprint. Re-checks the policy so a stale prompt cannot unlock. */
     fun onFingerprintSucceeded(sensorReady: Boolean) {
         if (!fingerprintAllowed(sensorReady)) return
         repository.clearFailures()
-        _events.trySend(LockEvent.Unlocked)
+        unlock()
     }
 
     fun onGroupTapped(index: Int) {
         val activeSession = session ?: return
         val current = _state.value
-        if (current.isError || current.lockoutSeconds > 0) return
+        if (current.isError || !current.keypadEnabled) return
         val group = current.groups.getOrNull(index) ?: return
 
         when (val result = activeSession.onGroupSelected(group)) {
@@ -103,7 +175,7 @@ class LockViewModel(application: Application) : AndroidViewModel(application) {
                 repository.clearFailures()
                 repository.pinRequired = false
                 _state.update { it.copy(step = it.pinLength) }
-                _events.trySend(LockEvent.Unlocked)
+                unlock()
             }
 
             TapResult.Rejected -> onRejected()

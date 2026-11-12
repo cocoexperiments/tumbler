@@ -3,47 +3,48 @@ package com.cocoexperiments.tumbler.ui.lock
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cocoexperiments.tumbler.R
 import com.cocoexperiments.tumbler.ui.components.KeypadGrid
 import com.cocoexperiments.tumbler.ui.components.PinDots
 import com.cocoexperiments.tumbler.ui.components.Wordmark
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import kotlinx.coroutines.delay
 
 @Composable
 fun LockScreen(
     state: LockUiState,
     onGroupTapped: (Int) -> Unit,
     onUseFingerprint: () -> Unit,
+    onSelectMinutes: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -67,8 +68,8 @@ fun LockScreen(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.height(32.dp))
-        ClockHeader()
+        Spacer(Modifier.height(40.dp))
+        AppHeader(state)
         Spacer(Modifier.weight(1f))
 
         Text(
@@ -102,14 +103,19 @@ fun LockScreen(
         KeypadGrid(
             groups = state.groups,
             isError = state.isError,
-            enabled = state.lockoutSeconds == 0,
+            enabled = state.keypadEnabled,
             onGroupTapped = onGroupTapped,
-            modifier = Modifier.graphicsLayer { translationX = shake.value * density },
+            modifier = Modifier.graphicsLayer {
+                translationX = shake.value * density
+                alpha = if (state.pauseSecondsLeft > 0) 0.3f else 1f
+            },
         )
-        // Fixed height so the keypad does not move when the button appears.
+        // Fixed height so the keypad does not move when the button or chips appear.
         Box(Modifier.height(48.dp), contentAlignment = Alignment.Center) {
-            if (state.fingerprintAvailable) {
-                TextButton(onClick = onUseFingerprint) { Text(stringResource(R.string.fingerprint_button)) }
+            when {
+                state.grantOptions.isNotEmpty() -> GrantChips(state, onSelectMinutes)
+                state.fingerprintAvailable ->
+                    TextButton(onClick = onUseFingerprint) { Text(stringResource(R.string.fingerprint_button)) }
             }
         }
         Spacer(Modifier.height(4.dp))
@@ -121,27 +127,63 @@ fun LockScreen(
     }
 }
 
+/** Which app is locked, or the brand name for the in-app preview. Wellbeing adds the countdown. */
 @Composable
-private fun ClockHeader() {
-    var now by remember { mutableStateOf(LocalDateTime.now()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            now = LocalDateTime.now()
-            delay(60_000L - now.second * 1000L - now.nano / 1_000_000L)
+private fun AppHeader(state: LockUiState) {
+    val colors = MaterialTheme.colorScheme
+    val label = state.appLabel
+    val pausing = state.pauseSecondsLeft > 0
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        state.appIcon?.let {
+            Image(
+                bitmap = it,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(18.dp)),
+            )
+            Spacer(Modifier.height(6.dp))
+        }
+        Text(
+            text = when {
+                pausing -> stringResource(R.string.lock_pause_title)
+                label != null -> stringResource(R.string.lock_title, label)
+                else -> stringResource(R.string.lock_title_preview)
+            },
+            style = MaterialTheme.typography.headlineSmall,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = when {
+                pausing && label != null && state.opensToday > 0 ->
+                    pluralStringResource(R.plurals.lock_pause_opens, state.opensToday, label, state.opensToday)
+                pausing && label != null -> stringResource(R.string.lock_pause_plain, label)
+                state.grantOptions.isNotEmpty() -> stringResource(R.string.lock_open_for)
+                else -> stringResource(R.string.lock_subtitle)
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        if (pausing) {
+            Text(
+                text = stringResource(R.string.lock_pause_countdown, state.pauseSecondsLeft),
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.primary,
+            )
         }
     }
-    val timeFormat = remember { DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT) }
-    val dateFormat = remember { DateTimeFormatter.ofPattern("EEEE, d MMMM") }
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = now.format(timeFormat),
-            style = MaterialTheme.typography.displayLarge,
-            fontWeight = FontWeight.Light,
-        )
-        Text(
-            text = now.format(dateFormat),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+}
+
+@Composable
+private fun GrantChips(state: LockUiState, onSelect: (Int) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        state.grantOptions.forEach { minutes ->
+            FilterChip(
+                selected = minutes == state.grantMinutes,
+                onClick = { onSelect(minutes) },
+                label = { Text(stringResource(R.string.minutes_short, minutes)) },
+            )
+        }
     }
 }

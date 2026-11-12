@@ -2,17 +2,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Draw the lock UI from the background, and launch it from a full-screen notification. -->
+    <!-- Show the lock in front of a locked app, launched from the accessibility guard. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-
-    <!-- Foreground service that listens for SCREEN_OFF / SCREEN_ON. -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Lets the app picker list launchable apps without the restricted QUERY_ALL_PACKAGES permission. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
 
     <application
         android:name=".TumblerApp"
@@ -34,30 +36,19 @@
             </intent-filter>
         </activity>
 
-        <!-- Rendered above the system keyguard. Not exported: only our own service,
-             notification and MainActivity can start it. -->
+        <!-- Shown in front of a locked app. Not exported: only our own guard service and
+             MainActivity can start it. -->
         <activity
             android:name=".LockScreenActivity"
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
-            android:showWhenLocked="true"
             android:taskAffinity=""
-            tools:ignore="DiscouragedApi,LockedOrientationActivity"
-            tools:targetApi="o_mr1" />
+            tools:ignore="DiscouragedApi,LockedOrientationActivity" />
 
-        <service
-            android:name=".service.LockScreenService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Listens for screen on/off broadcasts to present a PIN lock screen" />
-        </service>
-
-        <!-- Opt-in: notices another app / Home / Recents coming forward while locked and brings the
-             lock back. Reads window-change events only; cannot read screen content. -->
+        <!-- The trigger for app locking: notices a locked app coming to the front and shows the lock.
+             Reads window-change events only; cannot read screen content. -->
         <service
             android:name=".service.LockGuardService"
             android:exported="false"
@@ -76,7 +67,6 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
     </application>

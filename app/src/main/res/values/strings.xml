@@ -2,14 +2,6 @@
 <resources>
     <string name="app_name">Tumbler</string>
 
-    <!-- Notifications -->
-    <string name="channel_service_name">Lock service</string>
-    <string name="channel_launch_name">Lock screen</string>
-    <string name="notif_service_title">Lock screen is active</string>
-    <string name="notif_service_text">Your screen is protected by your PIN.</string>
-    <string name="notif_launch_title">Unlock</string>
-    <string name="notif_launch_text">Enter your PIN to continue.</string>
-
     <!-- PIN setup -->
     <string name="setup_title_verify">Enter current PIN</string>
     <string name="setup_title_new">Create your PIN</string>
@@ -26,6 +18,18 @@
     <string name="lock_prompt">Tap the button that contains the next digit of your PIN</string>
     <string name="lock_step">Digit %1$d of %2$d</string>
     <string name="lock_lockout">Too many wrong attempts. Try again in %1$d s</string>
+    <string name="lock_title">%1$s is locked</string>
+    <string name="lock_title_preview">Tumbler</string>
+    <string name="lock_subtitle">Enter your PIN to open it</string>
+    <string name="lock_pause_title">Take a breath</string>
+    <string name="lock_pause_plain">Pause. Do you really want to open %1$s?</string>
+    <plurals name="lock_pause_opens">
+        <item quantity="one">You\'ve opened %1$s %2$d time today. Still want to?</item>
+        <item quantity="other">You\'ve opened %1$s %2$d times today. Still want to?</item>
+    </plurals>
+    <string name="lock_pause_countdown">Keypad opens in %1$d s</string>
+    <string name="lock_open_for">Open for how long?</string>
+    <string name="minutes_short">%1$d min</string>
 
     <string name="fingerprint_button">Use fingerprint</string>
     <string name="fingerprint_title">Unlock Tumbler</string>
@@ -33,36 +37,40 @@
     <string name="fingerprint_use_pin">Use PIN</string>
 
     <!-- Home -->
-    <string name="home_status_active">Lock screen is on</string>
-    <string name="home_status_off">Lock screen is off</string>
+    <string name="home_status_active">App lock is on</string>
+    <string name="home_status_off">App lock is off</string>
     <string name="home_status_setup">Grant the permissions below to turn it on</string>
-    <string name="home_enable">Enable lock screen</string>
+    <string name="home_enable">Enable app lock</string>
     <string name="home_permissions">Permissions</string>
     <string name="perm_overlay_title">Display over other apps</string>
-    <string name="perm_overlay_desc">Lets the lock screen appear when the screen turns off.</string>
-    <string name="perm_notifications_title">Notifications</string>
-    <string name="perm_notifications_desc">Required for the background service and the unlock alert.</string>
-    <string name="perm_fullscreen_title">Full-screen alerts</string>
-    <string name="perm_fullscreen_desc">Lets the lock screen open over the system lock screen.</string>
+    <string name="perm_overlay_desc">Lets the lock appear in front of a locked app.</string>
     <string name="grant">Grant</string>
     <string name="granted">Granted</string>
     <string name="home_preview">Preview lock screen</string>
     <string name="home_change_pin">Change PIN</string>
-    <string name="home_note">Android does not let apps replace the system lock screen. Tumbler appears on top of it as an extra PIN layer, so keep your device\'s own screen lock enabled for full protection.</string>
+    <string name="home_note">Tumbler has its own PIN because Android does not let apps use the phone\'s PIN. Anyone with your unlocked phone could still uninstall Tumbler or switch off its Accessibility permission.</string>
+
+    <!-- Locked apps -->
+    <string name="back">Back</string>
+    <string name="apps_title">Locked apps</string>
+    <string name="apps_count">%1$d apps protected</string>
+    <string name="apps_card_empty">Choose which apps to protect</string>
+    <string name="apps_choose">Choose</string>
+    <string name="apps_edit">Edit</string>
+    <string name="apps_not_locked">Not locked</string>
+    <string name="apps_summary_privacy">PIN each time \u00B7 re-lock after %1$d min</string>
+    <string name="apps_summary_wellbeing">%1$d s pause \u00B7 open for %2$d min</string>
+    <string name="mode_privacy">Privacy</string>
+    <string name="mode_wellbeing">Wellbeing</string>
+    <string name="apps_grace_label">Ask again after</string>
+    <string name="apps_open_label">Open for</string>
 
     <string name="fingerprint_card_title">Unlock with fingerprint</string>
-    <string name="fingerprint_card_on">Use a fingerprint or your PIN. After a restart, the PIN is needed first.</string>
+    <string name="fingerprint_card_on">Privacy apps: use a fingerprint or your PIN. Wellbeing apps always use the keypad. After a restart, the PIN is needed first.</string>
     <string name="fingerprint_card_off">Off. You will always use your PIN.</string>
     <string name="fingerprint_card_no_hardware">This device has no fingerprint sensor.</string>
-    <string name="fingerprint_card_not_enrolled">Add a fingerprint in Android settings first. Android only allows this when the phone has its own screen lock (PIN, pattern or password).</string>
+    <string name="fingerprint_card_not_enrolled">Add a fingerprint in Android settings first.</string>
     <string name="fingerprint_card_enroll">Add fingerprint</string>
-
-    <!-- System lock overlap -->
-    <string name="system_lock_title">Two locks are active</string>
-    <string name="system_lock_body">Your phone\'s own screen lock is still on, so you unlock twice. To make Tumbler your only lock, set the system lock to None or Swipe in Settings.\n\nTrade-off: without a system lock, the Home button can still leave Tumbler, and the phone\'s data is not tied to a lock credential.</string>
-    <string name="system_lock_action">Open security settings</string>
-    <string name="system_lock_only_title">Tumbler is your only lock</string>
-    <string name="system_lock_only_body">The system lock is off, so unlocking Tumbler takes you straight to your home screen.</string>
 
     <!-- Brand -->
     <string name="brand_name">tumbler</string>
@@ -71,8 +79,8 @@
     <string name="brand_footer">A Coco Experiments product \u00B7 cocoexperiments.com</string>
 
     <!-- Lock guard (accessibility) -->
-    <string name="perm_guard_title">Stay locked (recommended)</string>
-    <string name="perm_guard_desc">Turn on the Tumbler lock guard in Accessibility settings. It only notices when another app, Home or Recents comes forward while your phone is locked, and brings the lock back. It cannot read your screen, and nothing leaves your phone. If the switch is greyed out: App info, menu, Allow restricted settings.</string>
+    <string name="perm_guard_title">App detection (required)</string>
+    <string name="perm_guard_desc">Turn on the Tumbler lock guard in Accessibility settings. It only notices which app comes to the front so it can lock the ones you chose. It cannot read your screen, and nothing leaves your phone. If the switch is greyed out: App info, menu, Allow restricted settings.</string>
     <string name="guard_service_label">Tumbler lock guard</string>
-    <string name="guard_service_description">Brings the Tumbler lock screen back if another app, Home or Recents appears while your phone is locked. It does not read screen content.</string>
+    <string name="guard_service_description">Notices when an app you chose to lock comes to the front and shows the Tumbler keypad. It does not read screen content.</string>
 </resources>

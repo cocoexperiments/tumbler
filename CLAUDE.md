@@ -1,12 +1,12 @@
 # Tumbler: guide for Claude
 
-Tumbler is an Android PIN lock screen app by Coco Experiments (https://cocoexperiments.com). Its keypad is a 3x3 board of "digit groups" that reshuffles when the lock opens and after a wrong tap. Repo: github.com/cocoexperiments/tumbler. Read `README.md` first for product behaviour and platform limits.
+Tumbler is an Android app lock by Coco Experiments (https://cocoexperiments.com). The user picks apps (WhatsApp, Instagram, ...); opening one shows a 3x3 board of "digit groups" that reshuffles when the lock opens and after a wrong tap. Two modes per app: Privacy (PIN each time, grace window) and Digital wellbeing (pause, PIN, time-boxed window). It does not touch the system lock screen (Android forbids that). Repo: github.com/cocoexperiments/tumbler. Read `README.md` first for product behaviour and platform limits.
 
 ## Docs
 
 - [Automated versioning architecture](https://claude.ai/artifact/G3MqshSQ2L94SdAC3z64cD): design for auto-incrementing the version on every push to `main`. Implemented in `.github/workflows/release.yml`. Sign-in to claude.ai is required.
 - `README.md`: build, first run, layout, "one lock instead of two", staying locked, known platform limits.
-- `docs/` is the GitHub Pages landing page (`index.html`, logo). Do not put internal documentation there; it is published.
+- `docs/` is the GitHub Pages landing page (`index.html`, logo). It must stay in step with the product (two use cases: privacy and digital wellbeing). Do not put internal documentation there; it is published.
 
 Keep this file current. When architecture, build, release or conventions change, update the relevant section here and the linked doc in the same piece of work.
 
@@ -19,25 +19,29 @@ Keep this file current. When architecture, build, release or conventions change,
 
 ## Architecture
 
-- `domain/`: pure Kotlin, no Android imports, unit tested. `KeypadGenerator` builds the board (every digit appears at least twice, three distinct digits per button). `PinSession` is the step-counter state machine; `LockoutPolicy` handles escalating lockout (free for 4 wrong taps, then 30s doubling up to 15 min). `UnlockPolicy` decides when the fingerprint is offered.
-- `data/PinRepository`: PIN and the persisted `lockArmed` flag.
-- `service/`: `LockScreenService` (foreground service listening for SCREEN_OFF/ON), `LockLauncher`, `BootReceiver` (boot and package replaced), `LockGuardService` (optional accessibility service that re-shows the lock when Home, Recents or another app comes forward), `LockState` (process-wide state).
-- `LockScreenActivity` (also hosts the fingerprint prompt): shown over the keyguard, excluded from Recents, own task (`taskAffinity=""`, `singleTask`). `MainActivity` is setup and home.
+- `domain/`: pure Kotlin, no Android imports, unit tested. `KeypadGenerator` builds the board (every digit appears at least twice, three distinct digits per button). `PinSession` is the step-counter state machine; `LockoutPolicy` handles escalating lockout (free for 4 wrong taps, then 30s doubling up to 15 min). `UnlockPolicy` decides when the fingerprint is offered. `AppLockPolicy` holds the per-app rules: `LockMode` (PRIVACY/WELLBEING), `LockedApp`, `shouldLock`, grant expiry, the wellbeing pause, and the `package|MODE|minutes` storage encoding.
+- `data/PinRepository`: PIN, master switch, locked-app list, per-day open counts, fingerprint and `pinRequired` flags (encrypted prefs).
+- `service/`: `LockGuardService` (accessibility service, the trigger: on a window change of a locked package with no grant it starts the lock; a timer re-locks when a grant expires while the app is open; SCREEN_OFF clears Privacy grants), `LockLauncher` (starts `LockScreenActivity` with `EXTRA_TARGET`), `LockState` (in-memory cache of settings plus per-package grants on `elapsedRealtime`), `BootReceiver` (sets `pinRequired` after boot).
+- `LockScreenActivity` (also hosts the fingerprint prompt): shown in front of the locked app, excluded from Recents, own task (`taskAffinity=""`, `singleTask`). Back goes to the launcher. It finishes on unlock, which reveals the app. `MainActivity` is setup, home and the locked-apps picker (`ui/main/LockedAppsScreen`).
 - `ui/`: Compose. `lock/`, `main/`, `components/`, `theme/` (brand colours live in `theme/Brand.kt`).
 
 ## Product rules (do not break these)
 
-- Tumbler is the only unlock the user sees and must not be bypassable via Recents or swipe-away. `LockState.armed` is set on screen-off and boot and cleared only by a correct PIN or, when the user enabled it, a successful system fingerprint prompt (`LockViewModel`). Never clear it elsewhere.
-- Do not use `noHistory` (destroys the lock on screen-off), `ACTION_CLOSE_SYSTEM_DIALOGS` (blocked since Android 12) or Lock Task mode (needs Device Owner). See README for why.
-- The accessibility service must only watch window changes, never read screen content. Keep its config minimal.
-- Fingerprint is an opt-in alternative, never a replacement: the PIN keypad is always usable. It uses `androidx.biometric` `BiometricPrompt` with `BIOMETRIC_STRONG` and no device-credential fallback (so no system PIN prompt). `LockScreenActivity` is a `FragmentActivity` for this reason. `PinRepository.pinRequired` is set on boot and cleared only by a correct PIN; while set, the fingerprint is not offered. `UnlockPolicy` holds the decision.
+- Tumbler has one PIN of its own shared by all locked apps (Android gives apps no access to the system PIN, and its prompt cannot shuffle). Do not add per-app PINs.
+- An app is unlocked only by a grant in `LockState`, created by a correct PIN or, for Privacy apps when the user enabled it, a successful system fingerprint prompt (`LockViewModel.unlock`). Never create grants elsewhere. Grants live in memory only.
+- Wellbeing apps never offer the fingerprint (it would skip the pause). `AppLockPolicy.fingerprintAllowedFor` decides.
+- Do not use `noHistory`, `ACTION_CLOSE_SYSTEM_DIALOGS` (blocked since Android 12) or Lock Task mode (needs Device Owner). Do not add a foreground service or notifications: the accessibility service is kept alive by the system.
+- The accessibility service must only watch window changes, never read screen content. Keep its config minimal (`canRetrieveWindowContent=false`). It is required, not optional.
+- Fingerprint is an opt-in alternative, never a replacement: the PIN keypad is always usable. It uses `androidx.biometric` `BiometricPrompt` with `BIOMETRIC_STRONG` and no device-credential fallback. `LockScreenActivity` is a `FragmentActivity` for this reason. `PinRepository.pinRequired` is set on boot and cleared only by a correct PIN; while set, the fingerprint is not offered.
 - Keep `domain/` free of Android dependencies so it stays unit testable.
-- Manifest: `LockScreenActivity`, services and `allowBackup=false` are deliberate. Only `MainActivity` and `BootReceiver` are exported.
+- Use a `<queries>` launcher-intent entry for the app picker, never `QUERY_ALL_PACKAGES`.
+- Manifest: `LockScreenActivity`, the guard service and `allowBackup=false` are deliberate. Only `MainActivity` and `BootReceiver` are exported.
+- Risk to remember: Google Play reviews Accessibility use strictly. Distribution is by APK for now.
 
 ## Build and test
 
 - `gradle testDebugUnitTest assembleDebug`
-- Unit tests are in `app/src/test/.../domain/` (`KeypadGeneratorTest`, `PinSessionTest`). Add tests for any new `domain/` logic.
+- Unit tests are in `app/src/test/.../domain/` (`KeypadGeneratorTest`, `PinSessionTest`, `UnlockPolicyTest`, `AppLockPolicyTest`). Add tests for any new `domain/` logic.
 - If you change the logo parameters, run `python3 logo/gen_logo.py <repo root>` and re-export `docs/logo.png` from `docs/logo.svg`.
 
 ## CI, versioning and releases

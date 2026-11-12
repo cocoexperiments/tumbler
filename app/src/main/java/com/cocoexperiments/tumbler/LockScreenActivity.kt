@@ -1,10 +1,9 @@
 package com.cocoexperiments.tumbler
 
-import android.app.KeyguardManager
 import android.content.Intent
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.SystemBarStyle
@@ -13,7 +12,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.biometric.BiometricPrompt
 import androidx.compose.runtime.getValue
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -34,8 +32,10 @@ import com.cocoexperiments.tumbler.util.Haptics
 import kotlinx.coroutines.launch
 
 /**
- * Renders above the system keyguard (showWhenLocked) and hosts the dynamic keypad, plus the optional
- * fingerprint prompt. (FragmentActivity because BiometricPrompt requires it.)
+ * Shown in front of a locked app (the package in [LockLauncher.EXTRA_TARGET]); hosts the shuffling
+ * keypad and the optional fingerprint prompt. A correct PIN records a grant for that app and
+ * finishes, which brings the app back to the front. (FragmentActivity because BiometricPrompt
+ * requires it.)
  */
 class LockScreenActivity : FragmentActivity() {
 
@@ -47,18 +47,17 @@ class LockScreenActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        LockState.isActive = true
-        configureWindow(intent)
+        // Hide the lock UI from screenshots, screen recording and the recents thumbnail.
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
         hideNavigationBar()
-        NotificationManagerCompat.from(this).cancel(LockLauncher.NOTIFICATION_ID)
 
-        // Back must not dismiss the lock screen.
+        // Back goes Home. It must never reveal the locked app underneath.
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() = Unit
+            override fun handleOnBackPressed() = leave()
         })
 
         lifecycleScope.launch {
@@ -66,7 +65,7 @@ class LockScreenActivity : FragmentActivity() {
                 viewModel.events.collect { event ->
                     when (event) {
                         LockEvent.Rejected -> Haptics.error(this@LockScreenActivity)
-                        LockEvent.Unlocked -> dismissLockScreen()
+                        LockEvent.Unlocked -> finishAndRemoveTask()
                     }
                 }
             }
@@ -79,33 +78,38 @@ class LockScreenActivity : FragmentActivity() {
                     state = state,
                     onGroupTapped = viewModel::onGroupTapped,
                     onUseFingerprint = { showFingerprint(force = true) },
+                    onSelectMinutes = viewModel::selectGrantMinutes,
                 )
             }
         }
+        startAttempt(intent)
     }
 
-    /** Re-launched while already alive (e.g. screen turned off and on again): start a new attempt. */
+    /** Re-launched while alive: a different locked app came forward, or the preview was opened again. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // A bring-to-front from the guard must not reset digits or reshuffle while the user is typing.
-        if (intent.getBooleanExtra(LockLauncher.EXTRA_REASSERT, false)) return
+        val target = intent.getStringExtra(LockLauncher.EXTRA_TARGET)
+        // Same app again must not reset digits or reshuffle while the user is typing.
+        if (target != null && target == LockState.target) return
         setIntent(intent)
-        applyWake(intent)
-        newAttempt()
+        startAttempt(intent)
+    }
+
+    private fun startAttempt(intent: Intent) {
+        val target = intent.getStringExtra(LockLauncher.EXTRA_TARGET)
+        LockState.target = target
+        fingerprintDeclined = false
+        viewModel.setTarget(target)
     }
 
     /** Coming back from a stopped state (screen was off): reshuffle and reset the sequence. */
     override fun onRestart() {
         super.onRestart()
-        newAttempt()
-    }
-
-    private fun newAttempt() {
         fingerprintDeclined = false
         viewModel.newAttempt()
     }
 
-    /** The system re-shows the bars after dialogs, keyguard prompts, etc.; hide them again. */
+    /** The system re-shows the bars after dialogs; hide them again. */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) hideNavigationBar()
@@ -130,17 +134,33 @@ class LockScreenActivity : FragmentActivity() {
         super.onPause()
     }
 
-    /** Left via Home, Recents or another app while still locked: come straight back. */
+    /**
+     * Left via Home, Recents or another app while the screen is on: remove the lock; the guard shows
+     * it again the next time the locked app is opened. If the screen turned off, keep it so it is
+     * still in front when the phone wakes.
+     */
     override fun onStop() {
         super.onStop()
         if (fingerprintShowing) biometricPrompt.cancelAuthentication() // no prompt over a stopped lock screen
-        if (!isFinishing) LockLauncher.reassert(this)
+        if (!isFinishing && getSystemService(PowerManager::class.java).isInteractive) finishAndRemoveTask()
     }
 
     override fun onDestroy() {
         LockState.isForeground = false
-        LockState.isActive = false
+        LockState.target = null
         super.onDestroy()
+    }
+
+    /** Back or Home from the lock: go to the launcher, never to the locked app. */
+    private fun leave() {
+        if (LockState.target != null) {
+            startActivity(
+                Intent(Intent.ACTION_MAIN)
+                    .addCategory(Intent.CATEGORY_HOME)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
+        finishAndRemoveTask()
     }
 
     private val biometricPrompt: BiometricPrompt by lazy {
@@ -163,9 +183,10 @@ class LockScreenActivity : FragmentActivity() {
     }
 
     /**
-     * Offers the fingerprint when it is enabled, enrolled and the PIN has not been forced (reboot).
-     * Without [force] it appears once per attempt; the "Use fingerprint" button passes force = true.
-     * The PIN keypad is always there underneath, so the fingerprint can never lock the user out.
+     * Offers the fingerprint when it is enabled, enrolled, allowed for this app's mode and the PIN
+     * has not been forced (reboot). Without [force] it appears once per attempt; the "Use
+     * fingerprint" button passes force = true. The PIN keypad is always there underneath, so the
+     * fingerprint can never lock the user out.
      */
     private fun showFingerprint(force: Boolean) {
         val allowed = viewModel.fingerprintAllowed(Biometrics.isReady(this))
@@ -182,50 +203,5 @@ class LockScreenActivity : FragmentActivity() {
                 .setConfirmationRequired(false)
                 .build(),
         )
-    }
-
-    private fun configureWindow(intent: Intent) {
-        // Hide the lock UI from screenshots, screen recording and the recents thumbnail.
-        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        if (Build.VERSION.SDK_INT >= 27) {
-            setShowWhenLocked(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
-        }
-        applyWake(intent)
-    }
-
-    /** Only wake the display when launched while it is meant to be on; see LockLauncher.prelaunch(). */
-    private fun applyWake(intent: Intent) {
-        if (!intent.getBooleanExtra(LockLauncher.EXTRA_WAKE_SCREEN, false)) return
-        if (Build.VERSION.SDK_INT >= 27) {
-            setTurnScreenOn(true)
-        } else {
-            @Suppress("DEPRECATION")
-            window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
-        }
-    }
-
-    /**
-     * Success path. Third-party apps cannot unlock a secure system keyguard on their own, so we ask
-     * the system to dismiss it (no-op without a secure lock; otherwise the system credential prompt
-     * appears) and then remove this activity.
-     */
-    private fun dismissLockScreen() {
-        LockState.disarm(this) // before finishing, so onStop() does not relaunch the lock
-        val keyguard = getSystemService(KeyguardManager::class.java)
-        if (keyguard.isKeyguardLocked) {
-            keyguard.requestDismissKeyguard(
-                this,
-                object : KeyguardManager.KeyguardDismissCallback() {
-                    override fun onDismissSucceeded() = finishAndRemoveTask()
-                    override fun onDismissCancelled() = finishAndRemoveTask()
-                    override fun onDismissError() = finishAndRemoveTask()
-                },
-            )
-        } else {
-            finishAndRemoveTask()
-        }
     }
 }

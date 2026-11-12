@@ -4,17 +4,21 @@
 
 **tumbler** - a Coco Experiments product (https://cocoexperiments.com). Simple, purposeful security.
 
-Compose + Material 3 (dark) PIN lock screen with a shuffling 3x3 "digit group" keypad. The board shuffles when the lock opens and after a wrong tap, and stays fixed while you enter correct digits.
+Compose + Material 3 (dark) **app lock** with a shuffling 3x3 "digit group" keypad. Pick the apps to protect (WhatsApp, Instagram, ...); opening one shows Tumbler's keypad in front of it. The board shuffles when the lock opens and after a wrong tap, and stays fixed while you enter correct digits.
+
+Two uses, chosen per app:
+- **Privacy**: PIN (or fingerprint) every time, with a grace window (1/5/15 min) so switching apps does not re-prompt. Grants are dropped when the screen turns off.
+- **Digital wellbeing**: friction against doom scrolling. A 10 s pause with the keypad disabled ("Take a breath", with today's open count), then the PIN, then a time-boxed window (5/10/15/30 min, chosen on the lock screen) after which the app locks again. Fingerprint is not offered here because it would skip the pause.
 
 ## Brand
 The logo is a padlock whose body is the 3x3 keypad. `logo/gen_logo.py <repo root>` regenerates the launcher icon, the in-app logo and `docs/logo.svg` from one set of parameters (re-export `docs/logo.png` from the SVG if you change it).
 All brand colours live in `ui/theme/Brand.kt` (plus the launcher icon in `res/drawable/ic_launcher_*.xml` and `res/values/colors.xml`). Replace them with official Coco Experiments values when available.
 
-## One lock instead of two
-Android does not let apps replace or disable the system lock. To unlock only once, set the system screen lock to None or Swipe (the Home screen of the app links to the setting). Trade-off: without a system lock, the Home button can still leave Tumbler.
+## One PIN
+Android does not let apps read or verify the phone's own PIN (the only route is BiometricPrompt's device-credential screen, which cannot shuffle), so Tumbler has its own 4-digit PIN. It is shared by every locked app; what differs per app is the mode and timing. Tumbler does not touch the system lock screen.
 
 ## Fingerprint unlock
-Optional, off by default: turn on **Unlock with fingerprint** on the Home screen. The lock screen then offers the system fingerprint prompt (strong biometrics only) and the PIN keypad stays available underneath ("Use PIN" or the "Use fingerprint" button), so either one unlocks. The first unlock after a reboot always needs the PIN, like Android's own lock. Android only enrols fingerprints when the phone has its own screen lock, so this cannot be combined with the "One lock instead of two" setup (system lock None/Swipe).
+Optional, off by default: turn on **Unlock with fingerprint** on the Home screen. A Privacy lock then offers the system fingerprint prompt (strong biometrics only) and the PIN keypad stays available underneath ("Use PIN" or the "Use fingerprint" button), so either one unlocks. The first unlock after a reboot always needs the PIN, like Android's own lock. Only Privacy apps offer it.
 
 ## Build
 Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotlin 2.0.21.
@@ -22,27 +26,29 @@ Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotl
 
 ## First run
 1. Create and confirm a 4-digit PIN.
-2. Grant: Display over other apps, Notifications, Full-screen alerts (Android 14+).
-3. Turn on "Enable lock screen", then press the power button twice to test.
+2. Grant **Display over other apps** and turn on the **Tumbler lock guard** in Accessibility settings (required: it is how Tumbler notices an app opening).
+3. Open **Locked apps**, switch on the apps to protect and choose Privacy or Wellbeing for each.
+4. Turn on "Enable app lock", then open a locked app to test.
 
 ## Layout
 - `domain/KeypadGenerator.kt` - board generator (every digit appears >= 2 times, 3 distinct digits per button)
 - `domain/PinSession.kt` - step counter state machine + lockout policy
+- `domain/AppLockPolicy.kt` - per-app modes, when to lock, grants, pause, storage format
 - `domain/UnlockPolicy.kt` - when the fingerprint may be offered
-- `data/PinRepository.kt` - EncryptedSharedPreferences storage
-- `service/` - foreground service (SCREEN_OFF/ON), launcher, boot receiver
-- `LockScreenActivity.kt` - shows over the keyguard; `ui/` - Compose screens and components
+- `data/PinRepository.kt` - EncryptedSharedPreferences storage (PIN, locked apps, open counts)
+- `service/LockGuardService.kt` - accessibility service that detects a locked app coming forward and shows the lock; `LockState` caches settings and grants; `LockLauncher` starts the lock; `BootReceiver` requires the PIN after a reboot
+- `LockScreenActivity.kt` - the lock in front of an app; `ui/` - Compose screens and components (`ui/main/LockedAppsScreen.kt` is the picker)
 
 ## Known platform limits
-- Android does not let third-party apps replace or unlock the system lock screen. This app sits above it;
-  on success it calls requestDismissKeyguard() (the system PIN/biometric still applies if one is set).
-- The Home/Recents buttons cannot be blocked without Device Owner / Lock Task mode.
-- `androidx.security:security-crypto` is deprecated upstream but still works; USE_FULL_SCREEN_INTENT is restricted on Google Play to calling/alarm apps.
-- Aggressive OEM battery managers may kill the service; exclude the app from battery optimisation.
+- Android does not let third-party apps replace or unlock the system lock screen, so Tumbler locks apps, not the phone.
+- The lock is an overlay activity started by an accessibility service; there is a brief moment where the app may be visible before the lock covers it.
+- Anyone with the unlocked phone can uninstall Tumbler or switch off its Accessibility permission. That is fine as friction, and worth knowing for privacy.
+- Apps that use the Accessibility API face strict Google Play review; for now Tumbler is distributed as an APK. `androidx.security:security-crypto` is deprecated upstream but still works.
+- Aggressive OEM battery managers may stop the accessibility service; exclude the app from battery optimisation.
 
-## Staying locked (Home / Recents / swipe-away)
-- The lock activity is excluded from Recents and lives in its own task.
-- A persisted "armed" flag is set on screen-off and boot and cleared only by a correct PIN, so killing the app or leaving the lock screen does not unlock anything; the lock is brought back.
-- Optional but recommended: enable **Tumbler lock guard** in Accessibility settings. It only watches window changes (no screen content) and re-shows the lock when Home, Recents or another app comes forward. Phone calls are allowed through. On Android 13+ a sideloaded APK needs *App info > menu > Allow restricted settings* first.
-- If you are ever stuck behind the lock, reboot into Safe mode (third-party apps are disabled) and uninstall or clear the app.
-- Not used on purpose: `noHistory` (it would destroy the lock on screen-off), `ACTION_CLOSE_SYSTEM_DIALOGS` (blocked for apps since Android 12) and Lock Task mode (needs Device Owner, otherwise it shows a pin prompt on every unlock).
+## How locking works
+- The guard sees `TYPE_WINDOW_STATE_CHANGED` (package name only, `canRetrieveWindowContent=false`). For a locked app with no active grant it starts `LockScreenActivity` with the target package.
+- A correct PIN (or fingerprint, Privacy only) records an in-memory grant for that package and finishes the lock, which reveals the app. Grants end by time; a timer in the guard re-locks an app that is still open when a Wellbeing window runs out.
+- Back or Home on the lock goes to the launcher, never to the locked app. The lock is excluded from Recents and lives in its own task.
+- Reboot: the first unlock needs the PIN (fingerprint is not offered until then).
+- If you are ever stuck, switch off the accessibility service in Settings, or reboot into Safe mode and uninstall.
