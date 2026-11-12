@@ -52,3 +52,6 @@ Open in Android Studio (Ladybug or newer, JDK 17). Gradle 8.9 / AGP 8.7.3 / Kotl
 - Back or Home on the lock goes to the launcher, never to the locked app. The lock is excluded from Recents and lives in its own task.
 - Reboot: the first unlock needs the PIN (fingerprint is not offered until then).
 - If you are ever stuck, switch off the accessibility service in Settings, or reboot into Safe mode and uninstall.
+
+## Thanks
+- Thanks to [Jijo Johnson](https://github.com/jijorcj), whose idea Tumbler is.
