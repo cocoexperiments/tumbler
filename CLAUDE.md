@@ -46,9 +46,9 @@ Keep this file current. When architecture, build, release or conventions change,
 
 ## CI, versioning and releases
 
-- `.github/workflows/release.yml` (Build and Release): runs on every push to `main`. Computes the version, runs unit tests, builds the debug APK with that version, uploads it as an Actions artifact, then tags the commit `v<version>` and publishes a GitHub Release with `tumbler-<version>.apk`. A failed build creates no tag, so the number is not used up.
+- `.github/workflows/release.yml` (Build and Release): runs on pushes to `main` that change shipped code only (a `paths:` filter: `app/**`, `gradle/**`, root Gradle files, minus `app/src/test`, `app/src/androidTest` and markdown). Docs, tests, workflows, `logo/` and `docs/` changes do not release. Computes the version, runs unit tests, builds the debug APK with that version, uploads it as an Actions artifact, then tags the commit `v<version>` and publishes a GitHub Release with `tumbler-<version>.apk`. A failed build creates no tag, so the number is not used up.
 - `.github/workflows/android.yml` (Android CI): pull requests and manual runs only. Tests and debug build, no tag, no release, no version.
-- Version: patch increments on every push to `main` (v1.0.1, v1.0.2, ...). Git tags are the source of truth: the next version is the highest plain `vMAJOR.MINOR.PATCH` tag plus one patch. `versionName` is that version; `versionCode` is `git rev-list --count HEAD`. Design and rationale: see the versioning doc above.
+- Version: patch increments on every releasing push to `main` (v1.0.1, v1.0.2, ...). Git tags are the source of truth: the next version is the highest plain `vMAJOR.MINOR.PATCH` tag plus one patch. `versionName` is that version; `versionCode` is `git rev-list --count HEAD`. Design and rationale: see the versioning doc above.
 - To start a new minor or major line, push a tag by hand (for example `v1.1.0`). It does not build by itself; the next push to `main` becomes `1.1.1`.
 - `app/build.gradle.kts` reads `-PappVersionName` and `-PappVersionCode`. Local builds without them get `0.0.0-dev` and code 1. Never hand-edit the version, and never add version-bump commits.
 - The tag is pushed with `GITHUB_TOKEN`, which does not start other workflows, so the release is published in the same workflow. Do not add a separate tag-triggered release workflow.

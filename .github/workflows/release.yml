@@ -1,12 +1,24 @@
 name: Build and Release
 
-# Every push to main gets the next patch version (v1.0.1, v1.0.2, ...).
+# A push to main that changes shipped code gets the next patch version (v1.0.1, v1.0.2, ...).
+# Pushes that only touch docs, tests, workflows, logo sources, etc. do not run this workflow.
 # Git tags are the source of truth. The tag is created only after the build succeeds.
 # To start a new minor or major line, push a tag by hand (e.g. v1.1.0); the next push becomes 1.1.1.
 
 on:
   push:
     branches: [main]
+    # Shipped code and build config only. The workflow runs if ANY changed file matches
+    # (a negated pattern excludes a file from matching, so test-only changes are skipped).
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "!app/src/test/**"
+      - "!app/src/androidTest/**"
+      - "!app/**/*.md"
 
 permissions:
   contents: write
