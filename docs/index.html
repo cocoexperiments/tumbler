@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tumbler — a lock screen that shuffles</title>
-<meta name="description" content="Tumbler is an Android PIN lock screen with a shuffling keypad of digit groups. Nobody can read your PIN from your fingers. Optional fingerprint unlock. A Coco Experiments product.">
+<title>Tumbler — lock your apps with a keypad that shuffles</title>
+<meta name="description" content="Tumbler locks the apps you choose behind a shuffling keypad of digit groups. Keep WhatsApp and Instagram private, or add friction to cut doom scrolling. Free Android app by Coco Experiments.">
 <meta name="theme-color" content="#0F1210">
-<meta property="og:title" content="Tumbler — a lock screen that shuffles">
-<meta property="og:description" content="A 3×3 keypad of digit groups that reshuffles. Your PIN never leaves your head — or your fingertips.">
+<meta property="og:title" content="Tumbler — lock your apps with a keypad that shuffles">
+<meta property="og:description" content="Lock private apps. Slow down the ones that eat your day. A shuffling keypad that nobody can read over your shoulder.">
 <meta property="og:type" content="website">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <style>
@@ -169,6 +169,51 @@ footer{border-top:1px solid var(--line);padding:40px 0;color:var(--husk);font-si
 footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
 footer a{color:var(--cream)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* app tiles + app-lock mocks */
+.app{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;color:#fff;flex:none}
+.app svg{width:24px;height:24px}
+.a1{background:linear-gradient(135deg,#7b5cf0,#d6479b 55%,#f5a04a)}
+.a2{background:linear-gradient(135deg,#1fa869,#128a52)}
+.a3{background:linear-gradient(135deg,#3b6fe0,#2a52b8)}
+.a4{background:linear-gradient(135deg,#e5484d,#b3262b)}
+.a5{background:linear-gradient(135deg,#475569,#2b3440)}
+.lockhead{display:flex;flex-direction:column;align-items:center;margin-top:22px;text-align:center}
+.lockhead .app{width:54px;height:54px;border-radius:15px;margin-bottom:10px}
+.lockhead .t{font-weight:600;font-size:1.02rem}
+.lockhead .s{color:var(--husk);font-size:.68rem;margin-top:3px;max-width:200px;line-height:1.35}
+.seg{display:inline-flex;background:var(--s2);border:1px solid var(--line);border-radius:999px;padding:4px;margin:0 auto 22px;gap:2px}
+.seg button{font:inherit;font-size:.85rem;font-weight:600;color:var(--husk);background:transparent;border:0;border-radius:999px;padding:8px 16px;cursor:pointer;transition:.15s}
+.seg button.on{background:var(--palm);color:var(--on-palm)}
+.pad.off{opacity:.3;pointer-events:none}
+.count{font-size:.74rem;color:var(--palm);font-weight:600;margin-top:10px;min-height:1.1em}
+.chips{display:flex;gap:6px;margin-top:10px;justify-content:center}
+.chips span{white-space:nowrap;font-size:.62rem;padding:5px 8px;border-radius:999px;background:var(--s3);border:1px solid var(--line);color:var(--husk)}
+.chips span.on{background:var(--palm-deep);color:#B0F1CB;border-color:transparent}
+.ring{width:84px;height:84px;border-radius:50%;border:3px solid var(--palm-deep);display:grid;place-items:center;font-size:1.9rem;font-weight:300;color:var(--palm);margin-top:18px;position:relative}
+.ring::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:3px solid var(--palm);border-right-color:transparent;border-bottom-color:transparent;transform:rotate(-30deg)}
+.row2{width:100%;display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--line);border-radius:14px;padding:9px 10px;margin-top:8px;text-align:left}
+.row2 .app{width:32px;height:32px;border-radius:9px}
+.row2 .app svg{width:17px;height:17px}
+.row2 .x{flex:1;min-width:0}
+.row2 .t{font-size:.76rem;font-weight:600}
+.row2 .m{font-size:.58rem;color:var(--husk)}
+.row2 .sw{flex:none;width:30px;height:18px}
+.row2 .sw::after{width:12px;height:12px;top:3px;right:3px}
+.row2 .sw.offsw{background:var(--s3)}
+.row2 .sw.offsw::after{right:auto;left:3px;background:var(--husk)}
+.tag{font-size:.54rem;font-weight:700;border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px}
+.tag.p{background:var(--palm-deep);color:#B0F1CB}
+.tag.w{background:#4a3a14;color:#f5cf7a}
+.uc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:44px}
+@media(max-width:860px){.uc{grid-template-columns:1fr}}
+.uc .card{padding:32px}
+.uc .card:hover{transform:none}
+.apps{display:flex;gap:10px;margin:18px 0 6px;flex-wrap:wrap}
+.apps .app{width:40px;height:40px;border-radius:11px}
+.uc .checks{margin-top:18px}
+.uc .checks svg{width:20px;height:20px}
+
 </style>
 </head>
 <body>
@@ -176,57 +221,79 @@ footer a{color:var(--cream)}
 <nav><div class="wrap">
   <a class="brand" href="#top"><img src="logo.svg" alt="">tumbler</a>
   <div class="navlinks">
-    <a href="#features">Features</a><a href="#how">How it works</a><a href="#screens">Screens</a><a href="#faq">FAQ</a>
+    <a href="#why">Two ways to use it</a><a href="#how">How it works</a><a href="#screens">Screens</a><a href="#faq">FAQ</a>
     <a class="btn sm" href="#download">Download</a>
   </div>
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap hero-grid">
   <div>
-    <div class="eyebrow">Android lock screen · by Coco Experiments</div>
-    <h1>A lock screen that <span class="accent">shuffles</span>.</h1>
-    <p class="lead">Tumbler swaps the old numeric keypad for nine buttons of digit groups that reshuffle every time. Anyone watching your thumb sees taps — never your PIN.</p>
+    <div class="eyebrow">Android app lock · by Coco Experiments</div>
+    <h1>Lock the apps that matter. <span class="accent">Slow down</span> the ones that eat your day.</h1>
+    <p class="lead">Pick an app. When you open it, Tumbler asks for your PIN on a keypad that reshuffles every time, so watchers see taps, never your code. Use it for privacy, or as a speed bump against doom scrolling.</p>
     <div class="cta">
       <a class="btn" href="#download">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
         Download for Android</a>
-      <a class="btn ghost" href="#how">See how it works</a>
+      <a class="btn ghost" href="#why">Privacy or wellbeing?</a>
     </div>
     <small>Free · No account · Nothing leaves your phone</small>
   </div>
   <div class="hero-phone">
+    <div class="seg" id="seg" role="tablist" style="display:flex;width:max-content"><button class="on" data-m="p" role="tab">Privacy</button><button data-m="w" role="tab">Wellbeing</button></div>
     <div class="phone"><div class="screen" id="demo">
-      <div class="clock" id="clk">9:41</div><div class="date" id="dte">Monday, 9 November</div>
+      <div class="lockhead"><div class="app a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg></div>
+        <div class="t">Instagram is locked</div><div class="s" id="sub">Enter your PIN to open it</div></div>
+      <div class="count" id="cnt"></div>
       <div class="sp"></div>
-      <div class="prompt">Tap the button that contains the next digit of your PIN</div>
       <div class="step" id="stp">Digit 1 of 4</div>
       <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
       <div class="pad" id="pad"></div>
       <div class="wm"><b>tumbler</b><br>by Coco Experiments</div>
     </div></div>
-    <p class="hint">Try it live — the demo PIN is <b>2 · 5 · 8 · 0</b></p>
+    <p class="hint">Try it live. The demo PIN is <b>2 · 5 · 8 · 0</b></p>
   </div>
 </div></header>
 
-<section id="features"><div class="wrap">
-  <div class="center"><div class="eyebrow">Why Tumbler</div>
-  <h2>Simple on the surface. Stubborn underneath.</h2>
-  <p class="lead">Built around one idea — your PIN shouldn't be readable from the outside — and the unglamorous details that make a lock actually hold.</p></div>
-  <div class="grid3">
-    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></div>
-      <h3>Shuffling digit groups</h3><p>A 3×3 board where each button carries three digits. It reshuffles when the lock opens and after every wrong tap.</p></div>
-    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg></div>
-      <h3>Shoulder-surf resistant</h3><p>Tap positions say nothing about digits. Smudges, cameras and glances reveal far less than on a fixed keypad.</p></div>
-    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-      <h3>Stays locked</h3><p>Kill the app, swipe it away, tap Home or Recents — Tumbler re-arms and brings the lock back until the right PIN is entered.</p></div>
-    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 4v6c0 5-3.8 8.7-9 10-5.2-1.3-9-5-9-10V6l9-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
-      <h3>Brute-force lockout</h3><p>After five wrong taps, escalating lockouts kick in — 30 seconds, then longer, up to 15 minutes.</p></div>
-    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 21 2m-4 4 3 3m-6 0 2 2"/></svg></div>
-      <h3>Encrypted on-device</h3><p>Your PIN lives in encrypted storage on your phone. No accounts, no servers, no analytics, no network calls.</p></div>
-    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-      <h3>Looks like it belongs</h3><p>A calm dark Material 3 design with a clock, a clear prompt and gentle haptics. Boots with your phone, ready after every restart.</p></div>
-    <div class="card fp-card"><img src="fingerprint.svg" alt="Fingerprint icon" width="96" height="96">
-      <div><h3>Fingerprint or PIN — your choice</h3><p>Turn on fingerprint unlock and touch the sensor to get in, or just use the shuffling keypad. The PIN is always there as a fallback, and the first unlock after a restart always asks for it. Off by default.</p></div></div>
+<section id="why"><div class="wrap">
+  <div class="center"><div class="eyebrow">Two ways to use Tumbler</div>
+  <h2>One keypad. Two very different jobs.</h2>
+  <p class="lead">Choose a mode for each app. Same shuffling keypad, same PIN, different purpose.</p></div>
+  <div class="uc">
+    <div class="card">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="eyebrow" style="margin-bottom:6px">Privacy</div>
+      <h3 style="font-size:1.5rem">A lock for your private apps.</h3>
+      <p>Hand someone your phone without handing them your chats. WhatsApp, Instagram, Facebook, photos, banking: each opens only with your PIN or fingerprint.</p>
+      <div class="apps">
+        <div class="app a2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.7 7L4 20l1.1-4.9A8 8 0 1 1 21 12z"/></svg></div>
+        <div class="app a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></svg></div>
+        <div class="app a3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 8h-1.5A1.5 1.5 0 0 0 10 9.500V21M8 13h6"/></svg></div>
+        <div class="app a5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></div>
+      </div>
+      <ul class="checks">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Shoulder-surf resistant.</b> Tap positions say nothing about digits.</div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Re-locks when you leave.</b> Screen off, or a grace window you pick.</div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Fingerprint if you like.</b> The PIN keypad is always there.</div></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ic" style="background:#4a3a14;color:#f5cf7a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <div class="eyebrow" style="margin-bottom:6px;color:#f5cf7a">Digital wellbeing</div>
+      <h3 style="font-size:1.5rem">Friction that breaks the habit.</h3>
+      <p>Most doom scrolling starts with a thumb that opens the app before you decide to. Tumbler adds a pause and a keypad you have to think about, so opening it becomes a choice.</p>
+      <div class="apps">
+        <div class="app a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></svg></div>
+        <div class="app a4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg></div>
+        <div class="app a5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16M20 4L4 20"/></svg></div>
+        <div class="app a3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14v10H9l-4 4z"/></svg></div>
+      </div>
+      <ul class="checks">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>A mindful pause.</b> A short countdown before the keypad even works.</div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Time-boxed access.</b> Open for 5, 10, 15 or 30 minutes, then it locks again.</div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Can't be tapped on autopilot.</b> The board reshuffles, so muscle memory doesn't help.</div></li>
+      </ul>
+    </div>
   </div>
 </div></section>
 
@@ -234,18 +301,18 @@ footer a{color:var(--cream)}
   <div>
     <div class="eyebrow">How it works</div>
     <h2>Tap the button that holds your digit.</h2>
-    <p class="lead">Your PIN is four digits. You never type digits — you pick which group contains the next one.</p>
+    <p class="lead">Your PIN is four digits. You never type digits. You pick which group contains the next one.</p>
     <ol class="steps">
-      <li><div><strong>Create a 4-digit PIN</strong><p>Set it once, confirm it, done.</p></div></li>
-      <li><div><strong>Wake your phone</strong><p>The lock appears with a freshly shuffled board.</p></div></li>
-      <li><div><strong>Tap the group with your digit</strong><p>Each digit shows up on at least two buttons, so there's always more than one right answer.</p></div></li>
-      <li><div><strong>Wrong tap? It reshuffles.</strong><p>The sequence resets and the board is redealt from scratch.</p></div></li>
-      <li><div><strong>Or just touch the sensor</strong><p>With fingerprint unlock turned on, the system prompt appears first. Tap “Use PIN” any time to switch to the keypad.</p></div></li>
+      <li><div><strong>Create one 4-digit PIN</strong><p>One PIN covers every locked app. Set it once, confirm it, done.</p></div></li>
+      <li><div><strong>Choose your apps</strong><p>Switch on the ones to lock, then pick Privacy or Wellbeing for each.</p></div></li>
+      <li><div><strong>Open a locked app</strong><p>Tumbler steps in front of it with a freshly shuffled board.</p></div></li>
+      <li><div><strong>Tap the group with your digit</strong><p>Each digit sits on at least two buttons, so there is always more than one right answer. A wrong tap reshuffles.</p></div></li>
+      <li><div><strong>You're in</strong><p>Privacy apps open right away. Wellbeing apps open for the time you chose, then lock again.</p></div></li>
     </ol>
   </div>
   <div class="example">
     <div class="eyebrow">Example · PIN 2580</div>
-    <p class="cap">Digit 1 is <b class="accent">2</b>. Two of these buttons contain it — either works:</p>
+    <p class="cap">Digit 1 is <b class="accent">2</b>. Two of these buttons contain it. Either works:</p>
     <div class="row"><div class="mini hit">274</div><div class="mini">918</div><div class="mini hit">325</div></div>
     <p class="cap">Next, digit 2 is <b class="accent">5</b>. The board has reshuffled:</p>
     <div class="row"><div class="mini">603</div><div class="mini hit">581</div><div class="mini">479</div></div>
@@ -253,13 +320,46 @@ footer a{color:var(--cream)}
   </div>
 </div></section>
 
-<section id="screens"><div class="wrap">
+<section id="features"><div class="wrap">
+  <div class="center"><div class="eyebrow">Why Tumbler</div>
+  <h2>Simple on the surface. Stubborn underneath.</h2>
+  <p class="lead">Built around one idea, that your PIN shouldn't be readable from the outside, plus the details that make an app lock actually hold.</p></div>
+  <div class="grid3">
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg></div>
+      <h3>Shuffling digit groups</h3><p>A 3×3 board where each button carries three digits. It reshuffles when the lock opens and after every wrong tap.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.500"/><rect x="14" y="3" width="7" height="7" rx="1.500"/><rect x="3" y="14" width="7" height="7" rx="1.500"/><path d="M14 17.500h7M17.500 14v7"/></svg></div>
+      <h3>You pick the apps</h3><p>Lock only what needs it. Everything else opens as normal, so Tumbler stays out of your way.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+      <h3>A mode for each app</h3><p>Privacy asks for the PIN every time. Wellbeing adds a pause and a timed window. Set them app by app.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 4v6c0 5-3.800 8.700-9 10-5.200-1.300-9-5-9-10V6l9-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3>Brute-force lockout</h3><p>After five wrong taps, escalating lockouts kick in: 30 seconds, then longer, up to 15 minutes.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.500" cy="15.500" r="4.500"/><path d="M10.700 12.300 21 2m-4 4 3 3m-6 0 2 2"/></svg></div>
+      <h3>Encrypted on-device</h3><p>Your PIN lives in encrypted storage on your phone. No accounts, no servers, no analytics, no network calls.</p></div>
+    <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg></div>
+      <h3>Can't read your screen</h3><p>Tumbler only notices which app is in front. It never reads what's inside any app.</p></div>
+    <div class="card fp-card"><img src="fingerprint.svg" alt="Fingerprint icon" width="96" height="96">
+      <div><h3>Fingerprint or PIN, your choice</h3><p>Turn on fingerprint unlock and touch the sensor to get into a locked app, or use the shuffling keypad. The PIN is always there as a fallback, and the first unlock after a restart always asks for it. Off by default.</p></div></div>
+  </div>
+</div></section>
+
+<section class="how" id="screens"><div class="wrap">
   <div class="center"><div class="eyebrow">Screens</div><h2>Quiet, clear, focused.</h2>
-  <p class="lead">One screen to set up, one to guard your phone.</p></div>
+  <p class="lead">Choose your apps once. After that, Tumbler only appears when it's needed.</p></div>
   <div class="shots">
+    <figure class="shot"><div class="phone"><div class="screen" style="padding-top:44px">
+      <div class="swr"><div class="t">Locked apps</div><div class="s">3 apps protected</div></div>
+      <div class="row2"><div class="app a2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.700 7L4 20l1.100-4.900A8 8 0 1 1 21 12z"/></svg></div><div class="x"><div class="t">WhatsApp<span class="tag p">Privacy</span></div><div class="m">PIN each time · re-lock after 1 min</div></div><span class="sw"></span></div>
+      <div class="row2"><div class="app a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></svg></div><div class="x"><div class="t">Instagram<span class="tag w">Wellbeing</span></div><div class="m">10 s pause · open for 10 min</div></div><span class="sw"></span></div>
+      <div class="row2"><div class="app a4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="x"><div class="t">YouTube<span class="tag w">Wellbeing</span></div><div class="m">10 s pause · open for 15 min</div></div><span class="sw"></span></div>
+      <div class="row2"><div class="app a3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M13 8h-1.500A1.500 1.500 0 0 0 10 9.500V21M8 13h6"/></svg></div><div class="x"><div class="t">Facebook</div><div class="m">Not locked</div></div><span class="sw offsw"></span></div>
+      <div class="row2"><div class="app a5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg></div><div class="x"><div class="t">Banking</div><div class="m">Not locked</div></div><span class="sw offsw"></span></div>
+      <div class="sp"></div><div class="pbtn">Add more apps</div></div></div>
+      <figcaption><b>Locked apps</b>Pick apps, then a mode for each</figcaption></figure>
+
     <figure class="shot"><div class="phone"><div class="screen">
-      <div class="clock" style="font-size:2.6rem">9:41</div><div class="date">Monday, 9 November</div><div class="sp"></div>
-      <div class="prompt">Tap the button that contains the next digit of your PIN</div><div class="step">Digit 3 of 4</div>
+      <div class="lockhead"><div class="app a2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.700 7L4 20l1.100-4.900A8 8 0 1 1 21 12z"/></svg></div><div class="t">WhatsApp is locked</div><div class="s">Enter your PIN to open it</div></div>
+      <div class="sp"></div>
+      <div class="step">Digit 3 of 4</div>
       <div class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></div>
       <div class="pad" style="gap:6px">
         <button tabindex="-1">407</button><button tabindex="-1">139</button><button tabindex="-1">652</button>
@@ -267,44 +367,37 @@ footer a{color:var(--cream)}
         <button tabindex="-1">348</button><button tabindex="-1">261</button><button tabindex="-1">597</button></div>
       <div style="color:var(--palm);font-size:.72rem;font-weight:600;margin-top:8px">Use fingerprint</div>
       <div class="wm"><b>tumbler</b><br>by Coco Experiments</div></div></div>
-      <figcaption><b>Lock screen</b>The shuffling keypad, with optional fingerprint</figcaption></figure>
+      <figcaption><b>Privacy lock</b>The shuffling keypad, with optional fingerprint</figcaption></figure>
 
-    <figure class="shot"><div class="phone"><div class="screen" style="padding-top:44px">
-      <div class="swr"><div class="t">Lock screen is on</div><div class="s">Your screen is protected by your PIN.</div></div>
-      <div class="pill"><span class="t">Enable lock screen</span><span class="sw"></span></div>
-      <div class="swr" style="margin-top:16px"><div class="t" style="font-size:.8rem">Permissions</div></div>
-      <div class="perm"><div><div class="t">Display over other apps</div><div class="s">Lets the lock appear when the screen turns off.</div></div><span class="ok">Granted</span></div>
-      <div class="perm"><div><div class="t">Unlock with fingerprint</div><div class="s">Or use your PIN.</div></div><span class="sw" style="flex:none"></span></div>
-      <div class="perm"><div><div class="t">Stay locked</div><div class="s">Lock guard in Accessibility.</div></div><span class="ok">Granted</span></div>
+    <figure class="shot"><div class="phone"><div class="screen">
+      <div class="lockhead"><div class="app a1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></svg></div><div class="t">Take a breath</div><div class="s">You've opened Instagram 6 times today. Still want to?</div></div>
+      <div class="ring">7</div>
+      <div class="count" style="margin-top:12px">Keypad opens in 7 s</div>
       <div class="sp"></div>
-      <div class="pbtn">Preview lock screen</div><div class="pbtn o">Change PIN</div></div></div>
-      <figcaption><b>Home</b>Simple switches, clear permissions</figcaption></figure>
-
-    <figure class="shot"><div class="phone"><div class="screen" style="padding-top:48px">
-      <div class="swr" style="text-align:center"><div class="t" style="font-size:1.05rem">Create your PIN</div><div class="s">Choose a 4-digit master PIN</div></div>
-      <div class="dots" style="margin:18px 0 6px"><i class="on"></i><i class="on"></i><i></i><i></i></div>
-      <div class="sp"></div>
-      <div class="kp"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="z">0</span></div>
-      <div class="note">Android doesn't let apps replace the system lock. Tumbler appears on top of it as an extra PIN layer.</div></div></div>
-      <figcaption><b>PIN setup</b>Create it once, confirm it</figcaption></figure>
+      <div class="pad off" style="gap:6px">
+        <button tabindex="-1">572</button><button tabindex="-1">084</button><button tabindex="-1">316</button>
+        <button tabindex="-1">930</button><button tabindex="-1">248</button><button tabindex="-1">761</button>
+        <button tabindex="-1">195</button><button tabindex="-1">403</button><button tabindex="-1">859</button></div>
+      <div class="chips"><span>5 min</span><span class="on">10 min</span><span>15 min</span><span>30 min</span></div>
+      <div class="wm" style="margin-top:8px">Open for how long?</div></div></div>
+      <figcaption><b>Wellbeing pause</b>A countdown, then a timed window</figcaption></figure>
   </div>
-  <p class="shotnote">Illustrative renderings of the app's screens.</p>
+  <p class="shotnote">Illustrative renderings of the app's screens. App names are examples; Tumbler is not affiliated with them.</p>
 </div></section>
 
-<section class="how"><div class="wrap sec">
+<section><div class="wrap sec">
   <div>
     <div class="eyebrow">Security, plainly</div>
     <h2>Built with honest trade-offs.</h2>
-    <p class="lead">Android doesn't let any app replace the system lock. Tumbler is explicit about what it does and doesn't do.</p>
-    <div class="honest"><b>Good to know:</b> Tumbler sits above your phone's lock as an extra PIN layer. For a single unlock, set the system lock to None or Swipe — the app walks you through it, and explains the trade-off. Fingerprint unlock is the exception: Android only enrols fingerprints when the phone has its own screen lock, so use one or the other.</div>
+    <p class="lead">Tumbler is explicit about how it works and where its limits are.</p>
+    <div class="honest"><b>Good to know:</b> Android won't let an app read or reuse your phone's own PIN, so Tumbler has its own. That's what lets the keypad shuffle. A determined person with your unlocked phone could still uninstall Tumbler or switch off its Accessibility permission. That is fine as a speed bump for wellbeing, and worth knowing for privacy.</div>
   </div>
   <ul class="checks">
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Needs one Accessibility permission.</b> It's how Tumbler notices an app opening. It only sees which window is in front and can't read anything on your screen.</div></li>
     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>No network access to your PIN.</b> Stored locally in encrypted preferences.</div></li>
-    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Optional lock guard.</b> An Accessibility service that only notices which window is in front — it can't read your screen.</div></li>
-    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Fingerprint is optional.</b> Uses Android's own biometric prompt, so Tumbler never sees your fingerprint. The PIN always works, and is required after a restart.</div></li>
-    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Phone calls still work.</b> The guard lets calls through.</div></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Fingerprint is optional.</b> It uses Android's own biometric prompt, so Tumbler never sees your fingerprint. The PIN always works, and is required after a restart.</div></li>
+    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Your phone's lock is untouched.</b> Tumbler doesn't replace or interfere with it.</div></li>
     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Open source.</b> Read every line on <a href="https://github.com/cocoexperiments/tumbler" style="color:var(--palm)">GitHub</a>.</div></li>
-    <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><div><b>Escape hatch.</b> Stuck? Boot into Safe mode and uninstall.</div></li>
   </ul>
 </div></section>
 
@@ -325,10 +418,11 @@ footer a{color:var(--cream)}
       <details><summary>How to install</summary><ol>
         <li>Download the APK on your phone.</li>
         <li>Open it and allow “Install unknown apps” for your browser or file manager if asked.</li>
-        <li>Open Tumbler, create your PIN, and grant the permissions.</li>
-        <li>Turn on “Enable lock screen”, then press the power button twice to test.</li>
+        <li>Open Tumbler and create your PIN.</li>
+        <li>Grant “Display over other apps” and turn on the Tumbler Accessibility service.</li>
+        <li>Choose the apps to lock and a mode for each, then open one to test it.</li>
         <li>Optional: turn on “Unlock with fingerprint” (needs a fingerprint enrolled in Android settings).</li></ol></details>
-      <details><summary>Accessibility switch greyed out?</summary><p>On Android 13+, a sideloaded app needs one extra step: App info → ⋮ menu → Allow restricted settings. Then enable “Tumbler lock guard”.</p></details>
+      <details><summary>Accessibility switch greyed out?</summary><p>On Android 13+, a sideloaded app needs one extra step: App info → ⋮ menu → Allow restricted settings. Then enable the Tumbler service.</p></details>
     </div>
   </div>
 </div></section>
@@ -336,13 +430,17 @@ footer a{color:var(--cream)}
 <section id="faq" style="padding-top:20px"><div class="wrap">
   <div class="center"><div class="eyebrow">FAQ</div><h2>Questions, answered.</h2></div>
   <div class="faq">
-    <details><summary>Does it replace my system lock?</summary><p>No — Android doesn't allow that for any app. Tumbler appears on top of the system lock. To avoid unlocking twice, set the system lock to None or Swipe; the app explains the trade-off.</p></details>
-    <details><summary>Can I unlock with my fingerprint?</summary><p>Yes, if you turn it on in the app. You can then touch the sensor or use the PIN keypad — either works. Android only enrols fingerprints when the phone has its own screen lock, so fingerprint unlock can't be combined with setting the system lock to None. After a restart, the PIN is needed first.</p></details>
+    <details><summary>Can I use my phone's PIN instead of a Tumbler PIN?</summary><p>No. Android doesn't let apps read or check your system PIN, and its own prompt can't shuffle. Tumbler has one PIN of its own, shared by every locked app.</p></details>
+    <details><summary>Do I need a different PIN for each app?</summary><p>No. One PIN covers everything. What you choose per app is the mode (Privacy or Wellbeing) and the timing.</p></details>
+    <details><summary>How is Wellbeing mode different from Privacy mode?</summary><p>Privacy asks for your PIN or fingerprint each time. Wellbeing adds a short countdown before the keypad works, then lets you in for a window you choose (5 to 30 minutes) before locking again. It's built to make you pause, not to keep anyone out.</p></details>
+    <details><summary>Why does it need Accessibility?</summary><p>It's the only reliable way for an app to know another app just came to the front. Tumbler only watches which window is showing. It can't read your screen, and nothing is sent anywhere.</p></details>
+    <details><summary>Can someone bypass it?</summary><p>Someone who already has your unlocked phone could uninstall Tumbler or turn off its Accessibility permission. It stops casual snooping and impulse opens, not a determined attacker with full access to an unlocked phone.</p></details>
+    <details><summary>Can I unlock with my fingerprint?</summary><p>Yes, if you turn it on. You can then touch the sensor or use the PIN keypad. After a restart, the PIN is needed first.</p></details>
     <details><summary>Can someone guess my PIN by tapping?</summary><p>Each tap narrows a digit to three possibilities and the board reshuffles after any mistake. After five wrong taps, Tumbler adds escalating lockouts of up to 15 minutes.</p></details>
     <details><summary>Is anything sent off my device?</summary><p>No. There are no accounts or analytics, and your PIN is stored in encrypted storage on the phone.</p></details>
     <details><summary>What if I forget my PIN?</summary><p>Reboot into Safe mode, where third-party apps are disabled, then clear or uninstall Tumbler.</p></details>
-    <details><summary>Is it on Google Play?</summary><p>Not yet. Full-screen lock apps face Play restrictions, so for now Tumbler is distributed as an APK on GitHub.</p></details>
-    <details><summary>Who makes it?</summary><p>Tumbler is a <a href="https://cocoexperiments.com" style="color:var(--palm)">Coco Experiments</a> product — built on simplicity, purpose and quality.</p></details>
+    <details><summary>Is it on Google Play?</summary><p>Not yet. Apps that use Accessibility face strict Play review, so for now Tumbler is distributed as an APK on GitHub.</p></details>
+    <details><summary>Who makes it?</summary><p>Tumbler is a <a href="https://cocoexperiments.com" style="color:var(--palm)">Coco Experiments</a> product, built on simplicity, purpose and quality.</p></details>
   </div>
 </div></section>
 
@@ -353,13 +451,6 @@ footer a{color:var(--cream)}
 
 <script>
 (function(){
-  // live clock
-  var c=document.getElementById('clk'),d=document.getElementById('dte');
-  function tick(){var n=new Date();c.textContent=n.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-    d.textContent=n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});}
-  tick();setInterval(tick,30000);
-
-  // board generator: 0-9 twice + 7 extra distinct digits, shuffled into 9 groups of 3 distinct digits
   function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
   function board(){
     var D=[0,1,2,3,4,5,6,7,8,9];
@@ -371,8 +462,10 @@ footer a{color:var(--cream)}
     }
     return board();
   }
-  var PIN=[2,5,8,0],step=0,groups,pad=document.getElementById('pad'),dots=document.querySelectorAll('#dots i'),
-      dEl=document.getElementById('dots'),stp=document.getElementById('stp'),busy=false;
+  var PIN=[2,5,8,0],step=0,groups,mode='p',timer=null,
+      pad=document.getElementById('pad'),dots=document.querySelectorAll('#dots i'),
+      dEl=document.getElementById('dots'),stp=document.getElementById('stp'),
+      cnt=document.getElementById('cnt'),sub=document.getElementById('sub'),busy=false;
   function render(){
     pad.innerHTML='';
     groups.forEach(function(g,i){var b=document.createElement('button');b.textContent=g.join('');b.setAttribute('aria-label','Digits '+g.join(', '));
@@ -380,22 +473,40 @@ footer a{color:var(--cream)}
     dots.forEach(function(x,i){x.className=i<step?'on':''});
     stp.textContent='Digit '+Math.min(step+1,4)+' of 4';
   }
+  function begin(){
+    clearTimeout(timer);step=0;busy=false;groups=board();render();
+    if(mode==='w'){
+      sub.textContent='Pause. Do you really want to open it?';
+      var n=5;pad.classList.add('off');
+      (function t(){
+        if(n>0){cnt.textContent='Keypad opens in '+n+' s';n--;timer=setTimeout(t,1000)}
+        else{cnt.textContent='Open for 10 minutes once unlocked';pad.classList.remove('off')}
+      })();
+    }else{
+      sub.textContent='Enter your PIN to open it';cnt.textContent='';pad.classList.remove('off');
+    }
+  }
   function tap(i){
     if(busy)return;
     if(groups[i].indexOf(PIN[step])>-1){
       step++;
-      if(step===4){busy=true;stp.textContent='Unlocked ✓';dots.forEach(function(x){x.className='on'});
-        setTimeout(function(){step=0;groups=board();busy=false;render()},1600);return}
-      groups=groups; // fixed while entering correct digits
+      if(step===4){busy=true;stp.textContent=mode==='w'?'Unlocked for 10 minutes ✓':'Unlocked ✓';dots.forEach(function(x){x.className='on'});
+        timer=setTimeout(begin,1800);return}
       dots.forEach(function(x,j){x.className=j<step?'on':''});stp.textContent='Digit '+(step+1)+' of 4';
     }else{
       step=0;busy=true;dEl.classList.add('err');pad.classList.add('shake');
-      setTimeout(function(){dEl.classList.remove('err');pad.classList.remove('shake');groups=board();busy=false;render()},380);
+      timer=setTimeout(function(){dEl.classList.remove('err');pad.classList.remove('shake');groups=board();busy=false;render();
+        if(mode==='w'&&cnt.textContent.indexOf('Keypad opens')===0)pad.classList.add('off')},380);
     }
   }
-  groups=board();render();
+  document.querySelectorAll('#seg button').forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll('#seg button').forEach(function(x){x.classList.remove('on')});
+      b.classList.add('on');mode=b.dataset.m;begin();
+    };
+  });
+  begin();
 
-  // latest release label (best effort; link works either way)
   try{
     fetch('https://api.github.com/repos/cocoexperiments/tumbler/releases/latest').then(function(r){return r.ok?r.json():null}).then(function(j){
       if(!j)return;
